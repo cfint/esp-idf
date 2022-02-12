@@ -29,9 +29,54 @@
 #include "stack/a2d_api.h"
 #include "a2d_int.h"
 #include "stack/a2d_sbc.h"
+#include "stack/a2dp_codec_api.h"
 #include "common/bt_defs.h"
 
+
 #if (defined(A2D_INCLUDED) && A2D_INCLUDED == TRUE)
+
+#define BTA_AV_CO_SBC_MAX_BITPOOL  53
+
+#if !defined(BTC_AV_SBC_DEFAULT_SAMP_FREQ)
+#define BTC_AV_SBC_DEFAULT_SAMP_FREQ A2D_SBC_IE_SAMP_FREQ_44
+#endif
+
+/* SBC SRC codec capabilities */
+const tA2D_SBC_CIE a2dp_sbc_src_caps = {
+    (A2D_SBC_IE_SAMP_FREQ_44), /* samp_freq */
+    (A2D_SBC_IE_CH_MD_MONO | A2D_SBC_IE_CH_MD_STEREO | A2D_SBC_IE_CH_MD_JOINT | A2D_SBC_IE_CH_MD_DUAL), /* ch_mode */
+    (A2D_SBC_IE_BLOCKS_16 | A2D_SBC_IE_BLOCKS_12 | A2D_SBC_IE_BLOCKS_8 | A2D_SBC_IE_BLOCKS_4), /* block_len */
+    (A2D_SBC_IE_SUBBAND_4 | A2D_SBC_IE_SUBBAND_8), /* num_subbands */
+    (A2D_SBC_IE_ALLOC_MD_L | A2D_SBC_IE_ALLOC_MD_S), /* alloc_mthd */
+    BTA_AV_CO_SBC_MAX_BITPOOL, /* max_bitpool */
+    A2D_SBC_IE_MIN_BITPOOL /* min_bitpool */
+};
+
+/* SBC SINK codec capabilities */
+static const tA2D_SBC_CIE a2dp_sbc_sink_caps = {
+    (A2D_SBC_IE_SAMP_FREQ_48 | A2D_SBC_IE_SAMP_FREQ_44), /* samp_freq */
+    (A2D_SBC_IE_CH_MD_MONO | A2D_SBC_IE_CH_MD_STEREO | A2D_SBC_IE_CH_MD_JOINT | A2D_SBC_IE_CH_MD_DUAL), /* ch_mode */
+    (A2D_SBC_IE_BLOCKS_16 | A2D_SBC_IE_BLOCKS_12 | A2D_SBC_IE_BLOCKS_8 | A2D_SBC_IE_BLOCKS_4), /* block_len */
+    (A2D_SBC_IE_SUBBAND_4 | A2D_SBC_IE_SUBBAND_8), /* num_subbands */
+    (A2D_SBC_IE_ALLOC_MD_L | A2D_SBC_IE_ALLOC_MD_S), /* alloc_mthd */
+    A2D_SBC_IE_MAX_BITPOOL, /* max_bitpool */
+    A2D_SBC_IE_MIN_BITPOOL /* min_bitpool */
+};
+
+/* Default SBC codec configuration */
+const tA2D_SBC_CIE a2dp_sbc_default_config = {
+    BTC_AV_SBC_DEFAULT_SAMP_FREQ,   /* samp_freq */
+    A2D_SBC_IE_CH_MD_JOINT,         /* ch_mode */
+    A2D_SBC_IE_BLOCKS_16,           /* block_len */
+    A2D_SBC_IE_SUBBAND_8,           /* num_subbands */
+    A2D_SBC_IE_ALLOC_MD_L,          /* alloc_mthd */
+    BTA_AV_CO_SBC_MAX_BITPOOL,      /* max_bitpool */
+    A2D_SBC_IE_MIN_BITPOOL          /* min_bitpool */
+};
+
+static tA2D_STATUS A2DP_CodecInfoMatchesCapabilitySbc(
+    const tA2D_SBC_CIE* p_cap, const uint8_t* p_codec_info,
+    bool is_capability);
 
 /******************************************************************************
 **
@@ -223,6 +268,232 @@ void A2D_ParsSbcMplHdr(UINT8 *p_src, BOOLEAN *p_frag, BOOLEAN *p_start, BOOLEAN 
         *p_last = (*p_src & A2D_SBC_HDR_L_MSK) ? TRUE : FALSE;
         *p_num  = (*p_src & A2D_SBC_HDR_NUM_MSK);
     }
+}
+
+const char* A2DP_CodecNameSbc(const uint8_t* p_codec_info) {
+  UNUSED(p_codec_info);
+  return "SBC";
+}
+
+bool A2DP_IsSinkCodecValidSbc(const uint8_t* p_codec_info) {
+  tA2D_SBC_CIE cfg_cie;
+
+  /* Use a liberal check when parsing the codec info */
+  return (A2D_ParsSbcInfo(&cfg_cie, (UINT8 *)p_codec_info, false) == A2D_SUCCESS) ||
+         (A2D_ParsSbcInfo(&cfg_cie, (UINT8 *)p_codec_info, true) == A2D_SUCCESS);
+}
+
+bool A2DP_IsPeerSinkCodecValidSbc(const uint8_t* p_codec_info) {
+  tA2D_SBC_CIE cfg_cie;
+
+  /* Use a liberal check when parsing the codec info */
+  return (A2D_ParsSbcInfo(&cfg_cie, (UINT8 *)p_codec_info, false) == A2D_SUCCESS) ||
+         (A2D_ParsSbcInfo(&cfg_cie, (UINT8 *)p_codec_info, true) == A2D_SUCCESS);
+}
+
+tA2D_STATUS A2DP_IsSinkCodecSupportedSbc(const uint8_t* p_codec_info) {
+  return A2DP_CodecInfoMatchesCapabilitySbc(&a2dp_sbc_sink_caps, p_codec_info,
+                                            false);
+}
+
+tA2D_STATUS A2DP_IsPeerSourceCodecSupportedSbc(const uint8_t* p_codec_info) {
+  return A2DP_CodecInfoMatchesCapabilitySbc(&a2dp_sbc_sink_caps, p_codec_info,
+                                            true);
+}
+
+btav_a2dp_codec_index_t A2DP_SinkCodecIndexSbc(const uint8_t* p_codec_info) {
+  UNUSED(p_codec_info);
+  return BTAV_A2DP_CODEC_INDEX_SINK_SBC;
+}
+
+btav_a2dp_codec_index_t A2DP_SourceCodecIndexSbc(const uint8_t* p_codec_info) {
+  UNUSED(p_codec_info);
+  return BTAV_A2DP_CODEC_INDEX_SOURCE_SBC;
+}
+
+// Checks whether A2DP SBC codec configuration matches with a device's codec
+// capabilities. |p_cap| is the SBC codec configuration. |p_codec_info| is
+// the device's codec capabilities. |is_capability| is true if
+// |p_codec_info| contains A2DP codec capability.
+// Returns A2D_SUCCESS if the codec configuration matches with capabilities,
+// otherwise the corresponding A2DP error status code.
+static tA2D_STATUS A2DP_CodecInfoMatchesCapabilitySbc(
+    const tA2D_SBC_CIE* p_cap, const uint8_t* p_codec_info,
+    bool is_capability) {
+  tA2D_STATUS status;
+  tA2D_SBC_CIE cfg_cie;
+
+  /* parse configuration */
+  status = A2D_ParsSbcInfo(&cfg_cie, (uint8_t*)p_codec_info, is_capability);
+  if (status != A2D_SUCCESS) {
+    LOG_ERROR("%s: parsing failed %d", __func__, status);
+    return status;
+  }
+
+  /* verify that each parameter is in range */
+
+  LOG_VERBOSE("%s: FREQ peer: 0x%x, capability 0x%x", __func__,
+              cfg_cie.samp_freq, p_cap->samp_freq);
+  LOG_VERBOSE("%s: CH_MODE peer: 0x%x, capability 0x%x", __func__,
+              cfg_cie.ch_mode, p_cap->ch_mode);
+  LOG_VERBOSE("%s: BLOCK_LEN peer: 0x%x, capability 0x%x", __func__,
+              cfg_cie.block_len, p_cap->block_len);
+  LOG_VERBOSE("%s: SUB_BAND peer: 0x%x, capability 0x%x", __func__,
+              cfg_cie.num_subbands, p_cap->num_subbands);
+  LOG_VERBOSE("%s: ALLOC_METHOD peer: 0x%x, capability 0x%x", __func__,
+              cfg_cie.alloc_mthd, p_cap->alloc_mthd);
+  LOG_VERBOSE("%s: MIN_BitPool peer: 0x%x, capability 0x%x", __func__,
+              cfg_cie.min_bitpool, p_cap->min_bitpool);
+  LOG_VERBOSE("%s: MAX_BitPool peer: 0x%x, capability 0x%x", __func__,
+              cfg_cie.max_bitpool, p_cap->max_bitpool);
+
+  /* sampling frequency */
+  if ((cfg_cie.samp_freq & p_cap->samp_freq) == 0) return A2D_NS_SAMP_FREQ;
+
+  /* channel mode */
+  if ((cfg_cie.ch_mode & p_cap->ch_mode) == 0) return A2D_NS_CH_MODE;
+
+  /* block length */
+  if ((cfg_cie.block_len & p_cap->block_len) == 0) return A2D_BAD_BLOCK_LEN;
+
+  /* subbands */
+  if ((cfg_cie.num_subbands & p_cap->num_subbands) == 0)
+    return A2D_NS_SUBBANDS;
+
+  /* allocation method */
+  if ((cfg_cie.alloc_mthd & p_cap->alloc_mthd) == 0)
+    return A2D_NS_ALLOC_MTHD;
+
+  /* min bitpool */
+  if (cfg_cie.min_bitpool > p_cap->max_bitpool) return A2D_NS_MIN_BITPOOL;
+
+  /* max bitpool */
+  if (cfg_cie.max_bitpool < p_cap->min_bitpool) return A2D_NS_MAX_BITPOOL;
+
+  return A2D_SUCCESS;
+}
+
+bool A2DP_CodecTypeEqualsSbc(const uint8_t* p_codec_info_a,
+                             const uint8_t* p_codec_info_b) {
+  tA2D_SBC_CIE sbc_cie_a;
+  tA2D_SBC_CIE sbc_cie_b;
+
+  // Check whether the codec info contains valid data
+  tA2D_STATUS a2dp_status =
+      A2D_ParsSbcInfo(&sbc_cie_a, (uint8_t*)p_codec_info_a, true);
+  if (a2dp_status != A2D_SUCCESS) {
+    if (a2dp_status != A2D_WRONG_CODEC)
+      LOG_ERROR("%s: cannot decode codec information: %d", __func__, a2dp_status);
+    return false;
+  }
+  a2dp_status = A2D_ParsSbcInfo(&sbc_cie_b, (uint8_t*)p_codec_info_b, true);
+  if (a2dp_status != A2D_SUCCESS) {
+      if (a2dp_status != A2D_WRONG_CODEC)
+        LOG_ERROR("%s: cannot decode codec information: %d", __func__, a2dp_status);
+    return false;
+  }
+
+  tA2D_CODEC_TYPE codec_type_a = A2DP_GetCodecType(p_codec_info_a);
+  tA2D_CODEC_TYPE codec_type_b = A2DP_GetCodecType(p_codec_info_b);
+
+  return (codec_type_a == codec_type_b) && (codec_type_a == A2D_MEDIA_CT_SBC);
+}
+
+bool A2DP_InitCodecConfigSbc(btav_a2dp_codec_index_t codec_index, UINT8 *p_result) {
+  switch(codec_index) {
+    case BTAV_A2DP_CODEC_INDEX_SINK_SBC:
+      return A2DP_InitCodecConfigSbcSink(p_result);
+    case BTAV_A2DP_CODEC_INDEX_SOURCE_SBC:
+      return A2DP_InitCodecConfigSbcSrc(p_result);
+    default:
+      break;
+  }
+
+  return false;
+}
+
+bool A2DP_InitCodecConfigSbcSink(uint8_t* p_codec_info) {
+  if (A2D_BldSbcInfo(A2D_MEDIA_TYPE_AUDIO, (tA2D_SBC_CIE *)&a2dp_sbc_sink_caps,
+                     p_codec_info) != A2D_SUCCESS) {
+    return false;
+  }
+
+  return true;
+}
+
+bool A2DP_InitCodecConfigSbcSrc(uint8_t* p_codec_info) {
+  if (A2D_BldSbcInfo(A2D_MEDIA_TYPE_AUDIO, (tA2D_SBC_CIE *)&a2dp_sbc_src_caps,
+                     p_codec_info) != A2D_SUCCESS) {
+    return false;
+  }
+
+  return true;
+}
+
+bool A2DP_BuildCodecConfigSbc(UINT8 *p_src_cap, UINT8 *p_result) {
+    tA2D_SBC_CIE    src_cap;
+    tA2D_SBC_CIE    pref_cap = a2dp_sbc_default_config;
+    UINT8           status = 0;
+
+    /* now try to build a preferred one */
+    /* parse configuration */
+    if ((status = A2D_ParsSbcInfo(&src_cap, p_src_cap, TRUE)) != 0) {
+        APPL_TRACE_DEBUG(" Cant parse src cap ret = %d", status);
+        return false;
+    }
+
+    if (src_cap.samp_freq & A2D_SBC_IE_SAMP_FREQ_48) {
+        pref_cap.samp_freq = A2D_SBC_IE_SAMP_FREQ_48;
+    } else if (src_cap.samp_freq & A2D_SBC_IE_SAMP_FREQ_44) {
+        pref_cap.samp_freq = A2D_SBC_IE_SAMP_FREQ_44;
+    }
+
+    if (src_cap.ch_mode & A2D_SBC_IE_CH_MD_JOINT) {
+        pref_cap.ch_mode = A2D_SBC_IE_CH_MD_JOINT;
+    } else if (src_cap.ch_mode & A2D_SBC_IE_CH_MD_STEREO) {
+        pref_cap.ch_mode = A2D_SBC_IE_CH_MD_STEREO;
+    } else if (src_cap.ch_mode & A2D_SBC_IE_CH_MD_DUAL) {
+        pref_cap.ch_mode = A2D_SBC_IE_CH_MD_DUAL;
+    } else if (src_cap.ch_mode & A2D_SBC_IE_CH_MD_MONO) {
+        pref_cap.ch_mode = A2D_SBC_IE_CH_MD_MONO;
+    }
+
+    if (src_cap.block_len & A2D_SBC_IE_BLOCKS_16) {
+        pref_cap.block_len = A2D_SBC_IE_BLOCKS_16;
+    } else if (src_cap.block_len & A2D_SBC_IE_BLOCKS_12) {
+        pref_cap.block_len = A2D_SBC_IE_BLOCKS_12;
+    } else if (src_cap.block_len & A2D_SBC_IE_BLOCKS_8) {
+        pref_cap.block_len = A2D_SBC_IE_BLOCKS_8;
+    } else if (src_cap.block_len & A2D_SBC_IE_BLOCKS_4) {
+        pref_cap.block_len = A2D_SBC_IE_BLOCKS_4;
+    }
+
+    if (src_cap.num_subbands & A2D_SBC_IE_SUBBAND_8) {
+        pref_cap.num_subbands = A2D_SBC_IE_SUBBAND_8;
+    } else if (src_cap.num_subbands & A2D_SBC_IE_SUBBAND_4) {
+        pref_cap.num_subbands = A2D_SBC_IE_SUBBAND_4;
+    }
+
+    if (src_cap.alloc_mthd & A2D_SBC_IE_ALLOC_MD_L) {
+        pref_cap.alloc_mthd = A2D_SBC_IE_ALLOC_MD_L;
+    } else if (src_cap.alloc_mthd & A2D_SBC_IE_ALLOC_MD_S) {
+        pref_cap.alloc_mthd = A2D_SBC_IE_ALLOC_MD_S;
+    }
+
+    if (A2D_SBC_IE_MIN_BITPOOL <= src_cap.max_bitpool &&
+        src_cap.max_bitpool <= A2D_SBC_IE_MAX_BITPOOL) {
+        pref_cap.max_bitpool = pref_cap.max_bitpool < src_cap.max_bitpool ?
+                               pref_cap.max_bitpool : src_cap.max_bitpool;
+    }
+
+    if (A2D_SBC_IE_MIN_BITPOOL <= src_cap.min_bitpool &&
+        src_cap.min_bitpool <= A2D_SBC_IE_MAX_BITPOOL) {
+        pref_cap.min_bitpool = pref_cap.min_bitpool > src_cap.min_bitpool ?
+                               pref_cap.min_bitpool : src_cap.min_bitpool;
+    }
+
+    status = A2D_BldSbcInfo(A2D_MEDIA_TYPE_AUDIO, (tA2D_SBC_CIE *) &pref_cap, p_result);
+    return status == A2D_SUCCESS;
 }
 
 #endif /* #if (defined(A2D_INCLUDED) && A2D_INCLUDED == TRUE) */

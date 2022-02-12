@@ -23,6 +23,10 @@
  ******************************************************************************/
 #ifndef A2D_SBC_H
 #define A2D_SBC_H
+
+#include "bt_av.h"
+#include "a2d_api.h"
+
 #if (A2D_INCLUDED == TRUE)
 /*****************************************************************************
 **  Constants
@@ -184,6 +188,192 @@ extern void A2D_BldSbcMplHdr(UINT8 *p_dst, BOOLEAN frag, BOOLEAN start,
 extern void A2D_ParsSbcMplHdr(UINT8 *p_src, BOOLEAN *p_frag,
                               BOOLEAN *p_start, BOOLEAN *p_last,
                               UINT8 *p_num);
+
+/******************************************************************************
+**
+** Function         A2DP_CodecNameSbc
+**
+** Description      Gets the A2DP SBC codec name for a given |p_codec_info|.
+**
+**                      p_codec_info:  Contains information about the codec capabilities.
+**
+** Returns          Codec name.
+**
+******************************************************************************/
+const char* A2DP_CodecNameSbc(const uint8_t* p_codec_info);
+
+// Checks whether the codec capabilities contain a valid A2DP SBC Sink codec.
+// NOTE: only codecs that are implemented are considered valid.
+// Returns true if |p_codec_info| contains information about a valid SBC codec,
+// otherwise false.
+/******************************************************************************
+**
+** Function         A2DP_IsSinkCodecValidSbc
+**
+** Description      Checks whether the codec capabilities contain a valid A2DP SBC Sink codec.
+**                  NOTE: only codecs that are implemented are considered valid.
+**
+**                      p_codec_info:  Contains information about the codec capabilities.
+**
+** Returns          true if |p_codec_info| contains information about a valid codec,
+**                  otherwise false.
+**
+******************************************************************************/
+bool A2DP_IsSinkCodecValidSbc(const uint8_t* p_codec_info);
+
+/******************************************************************************
+**
+** Function         A2DP_IsPeerSinkCodecValidSbc
+**
+** Description      Checks whether the codec capabilities contain a valid peer A2DP SBC Sink
+**                  codec.
+**                  NOTE: only codecs that are implemented are considered valid.
+**
+**                      p_codec_info:  contains information about the codec capabilities of the
+**                                     peer device.
+**
+** Returns          true if |p_codec_info| contains information about a valid SBC codec,
+**                  otherwise false.
+**
+******************************************************************************/
+extern bool A2DP_IsPeerSinkCodecValidSbc(const uint8_t* p_codec_info);
+
+/******************************************************************************
+**
+** Function         A2DP_IsSinkCodecSupportedSbc
+**
+** Description      Checks whether A2DP SBC Sink codec is supported.
+**
+**                      p_codec_info:  Contains information about the codec capabilities.
+**
+** Returns          true if the A2DP SBC Sink codec is supported, otherwise false.
+**
+******************************************************************************/
+extern tA2D_STATUS A2DP_IsSinkCodecSupportedSbc(const uint8_t* p_codec_info);
+
+
+/******************************************************************************
+**
+** Function         A2DP_IsPeerSourceCodecSupportedSbc
+**
+** Description      Checks whether an A2DP SBC Source codec for a peer Source device is
+**                  supported
+**
+**                      p_codec_info:  contains information about the codec capabilities of the
+**                                     peer device.
+**
+** Returns          true if the A2DP SBC Source codec for a peer Source device is
+**                  supported, otherwise false.
+**
+******************************************************************************/
+tA2D_STATUS A2DP_IsPeerSourceCodecSupportedSbc(const uint8_t* p_codec_info);
+
+/******************************************************************************
+**
+** Function         A2DP_SinkCodecIndexSbc
+**
+** Description      Gets the A2DP SBC Sink codec index for a given |p_codec_info|.
+**
+**                      p_codec_info:  Contains information about the codec capabilities.
+**
+** Returns          the corresponding |btav_a2dp_codec_index_t| on success,
+**                  otherwise |BTAV_A2DP_CODEC_INDEX_MAX|.
+**
+******************************************************************************/
+extern btav_a2dp_codec_index_t A2DP_SinkCodecIndexSbc(const uint8_t* p_codec_info);
+
+/******************************************************************************
+**
+** Function         A2DP_SourceCodecIndexSbc
+**
+** Description      Gets the A2DP SBC Source codec index for a given |p_codec_info|.
+**
+**                      p_codec_info:  Contains information about the codec capabilities.
+**
+** Returns          the corresponding |btav_a2dp_codec_index_t| on success,
+**                  otherwise |BTAV_A2DP_CODEC_INDEX_MAX|.
+**
+******************************************************************************/
+extern btav_a2dp_codec_index_t A2DP_SourceCodecIndexSbc(const uint8_t* p_codec_info);
+
+/******************************************************************************
+**
+** Function
+**
+** Description      Checks whether two A2DP SBC codecs |p_codec_info_a| and |p_codec_info_b|
+**                  have the same type.
+**
+**                      p_codec_info_a:  Contains information about the codec capabilities.
+**
+**                      p_codec_info_b:  Contains information about the codec capabilities.
+**
+** Returns          true if the two codecs have the same type, otherwise false.
+**
+******************************************************************************/
+extern bool A2DP_CodecTypeEqualsSbc(const uint8_t* p_codec_info_a,
+                                    const uint8_t* p_codec_info_b);
+
+/******************************************************************************
+**
+** Function         A2DP_InitCodecConfigSbc
+**
+** Description      Initializes A2DP codec-specific information into |p_result|.
+**                  The selected codec is defined by |codec_index|.
+**
+**                      codec_index:  Selected codec index.
+**
+**                  Output Parameters:
+**                      p_result:  The resulting codec information element.
+**
+** Returns          true on success, otherwise false.
+**
+******************************************************************************/
+bool A2DP_InitCodecConfigSbc(btav_a2dp_codec_index_t codec_index, UINT8 *p_result);
+
+/******************************************************************************
+**
+** Function         A2DP_InitCodecConfigSbcSink
+**
+** Description      Initializes A2DP codec-specific information into |p_result|.
+**                  The selected codec is defined by |codec_index|.
+**
+**                      p_codec_info:  Contains information about the codec capabilities.
+**
+** Returns          true on success, otherwise false.
+**
+******************************************************************************/
+bool A2DP_InitCodecConfigSbcSink(uint8_t* p_codec_info);
+
+/******************************************************************************
+**
+** Function         A2DP_InitCodecConfigSbcSrc
+**
+** Description      Initializes A2DP codec-specific information into |p_result|.
+**                  The selected codec is defined by |codec_index|.
+**
+**                      p_codec_info:  Contains information about the codec capabilities.
+**
+** Returns          true on success, otherwise false.
+**
+******************************************************************************/
+bool A2DP_InitCodecConfigSbcSrc(uint8_t* p_codec_info);
+
+/******************************************************************************
+**
+** Function         A2DP_BuildCodecConfigSbc
+**
+** Description      Build codec info from a source config
+**
+**                      p_src_cap:  Codec capabilities of the A2DP source.
+**
+**                  Output Parameters:
+**                      p_result:  The resulting codec capabilities.
+**
+** Returns          true on success, otherwise false.
+**
+******************************************************************************/
+bool A2DP_BuildCodecConfigSbc(UINT8 *p_src_cap, UINT8 *p_result);
+
 #ifdef __cplusplus
 }
 #endif

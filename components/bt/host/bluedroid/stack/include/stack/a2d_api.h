@@ -55,6 +55,8 @@
 #define A2D_MEDIA_CT_M24        0x02    /* MPEG-2, 4 AAC media codec type */
 #define A2D_MEDIA_CT_ATRAC      0x04    /* ATRAC family media codec type */
 
+typedef uint8_t tA2D_CODEC_TYPE; /* A2DP Codec type: A2DP_MEDIA_CT_* */
+
 #define A2D_SUCCESS           0     /* Success */
 #define A2D_FAIL              0x0A  /* Failed */
 #define A2D_BUSY              0x0B  /* A2D_FindService is already in progress */
