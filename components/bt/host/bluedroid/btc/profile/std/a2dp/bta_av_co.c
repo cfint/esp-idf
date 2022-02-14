@@ -210,7 +210,7 @@ BOOLEAN bta_av_co_audio_init(btav_a2dp_codec_index_t codec_index,
     *p_protect_info = 0;
 
     /* reset remote preference through setconfig */
-    bta_av_co_cb.codec_cfg_setconfig.id = BTC_AV_CODEC_NONE;
+    memset(bta_av_co_cb.codec_cfg_setconfig.info, 0, AVDT_CODEC_SIZE);
 
     if (tsep == AVDT_TSEP_SRC) {
 #if defined(BTA_AV_CO_CP_SCMS_T) && (BTA_AV_CO_CP_SCMS_T == TRUE)
@@ -664,36 +664,20 @@ void bta_av_co_audio_setconfig(tBTA_AV_HNDL hndl,
             osi_mutex_global_lock();
 
             /* Check if the configuration matches the current codec config */
-            switch (bta_av_co_cb.codec_cfg.id) {
-            case BTC_AV_CODEC_SBC:
-                if (!A2DP_CodecTypeEquals(bta_av_co_cb.codec_cfg_setconfig.info, p_codec_info)) {
-                    recfg_needed = TRUE;
-                } else if ((num_protect == 1) && (!bta_av_co_cb.cp.active)) {
-                    recfg_needed = TRUE;
-                }
-
-                /* if remote side requests a restricted notify sinks preferred bitpool range as all other params are
-                   already checked for validify */
-                APPL_TRACE_EVENT("remote peer setconfig bitpool range [%d:%d]",
-                                 p_codec_info[BTA_AV_CO_SBC_MIN_BITPOOL_OFF],
-                                 p_codec_info[BTA_AV_CO_SBC_MAX_BITPOOL_OFF] );
-
-                bta_av_co_cb.codec_cfg_setconfig.id = BTC_AV_CODEC_SBC;
-                memcpy(bta_av_co_cb.codec_cfg_setconfig.info, p_codec_info, AVDT_CODEC_SIZE);
-                if (AVDT_TSEP_SNK == t_local_sep) {
-                    /* If Peer is SRC, and our cfg subset matches with what is requested by peer, then
-                                         just accept what peer wants */
-                    memcpy(bta_av_co_cb.codec_cfg.info, p_codec_info, AVDT_CODEC_SIZE);
-                    recfg_needed = FALSE;
-                }
-                break;
-
-
-            default:
-                APPL_TRACE_ERROR("bta_av_co_audio_setconfig unsupported cid %d", bta_av_co_cb.codec_cfg.id);
+            if (!A2DP_CodecTypeEquals(bta_av_co_cb.codec_cfg_setconfig.info, p_codec_info)) {
                 recfg_needed = TRUE;
-                break;
+            } else if ((num_protect == 1) && (!bta_av_co_cb.cp.active)) {
+                recfg_needed = TRUE;
             }
+
+            memcpy(bta_av_co_cb.codec_cfg_setconfig.info, p_codec_info, AVDT_CODEC_SIZE);
+            if (AVDT_TSEP_SNK == t_local_sep) {
+                /* If Peer is SRC, and our cfg subset matches with what is requested by peer, then
+                                     just accept what peer wants */
+                memcpy(bta_av_co_cb.codec_cfg.info, p_codec_info, AVDT_CODEC_SIZE);
+                recfg_needed = FALSE;
+            }
+
             /* Protect access to bta_av_co_cb.codec_cfg */
             osi_mutex_global_unlock();
         } else {
@@ -781,7 +765,7 @@ void bta_av_co_audio_close(tBTA_AV_HNDL hndl, UINT16 mtu)
     }
 
     /* reset remote preference through setconfig */
-    bta_av_co_cb.codec_cfg_setconfig.id = BTC_AV_CODEC_NONE;
+    memset(bta_av_co_cb.codec_cfg_setconfig.info, 0, AVDT_CODEC_SIZE);
 }
 
 /*******************************************************************************
@@ -942,27 +926,7 @@ static BOOLEAN bta_av_co_audio_codec_build_config(const UINT8 *p_codec_caps, UIN
     FUNC_TRACE();
 
     memset(p_codec_cfg, 0, AVDT_CODEC_SIZE);
-
-    switch (bta_av_co_cb.codec_cfg.id) {
-    case BTC_AV_CODEC_SBC:
-        /*  only copy the relevant portions for this codec to avoid issues when
-            comparing codec configs covering larger codec sets than SBC (7 bytes) */
-        memcpy(p_codec_cfg, bta_av_co_cb.codec_cfg.info, BTA_AV_CO_SBC_MAX_BITPOOL_OFF + 1);
-
-        /* Update the bit pool boundaries with the codec capabilities */
-        p_codec_cfg[BTA_AV_CO_SBC_MIN_BITPOOL_OFF] = p_codec_caps[BTA_AV_CO_SBC_MIN_BITPOOL_OFF];
-        p_codec_cfg[BTA_AV_CO_SBC_MAX_BITPOOL_OFF] = p_codec_caps[BTA_AV_CO_SBC_MAX_BITPOOL_OFF];
-
-        APPL_TRACE_EVENT("bta_av_co_audio_codec_build_config : bitpool min %d, max %d",
-                         p_codec_cfg[BTA_AV_CO_SBC_MIN_BITPOOL_OFF],
-                         p_codec_caps[BTA_AV_CO_SBC_MAX_BITPOOL_OFF]);
-        break;
-    default:
-        APPL_TRACE_ERROR("bta_av_co_audio_codec_build_config: unsupported codec_type %d", bta_av_co_cb.codec_cfg.id);
-        return FALSE;
-        break;
-    }
-    return TRUE;
+    return A2DP_BuildCodecConfig((UINT8 *)p_codec_caps, p_codec_cfg);
 }
 
 /*******************************************************************************
@@ -1208,8 +1172,6 @@ void bta_av_co_audio_codec_reset(void)
     FUNC_TRACE();
 
     /* Reset the current configuration to SBC */
-    bta_av_co_cb.codec_cfg.id = BTC_AV_CODEC_SBC;
-
     if (A2D_BldSbcInfo(A2D_MEDIA_TYPE_AUDIO, (tA2D_SBC_CIE *)&btc_av_sbc_default_config, bta_av_co_cb.codec_cfg.info) != A2D_SUCCESS) {
         APPL_TRACE_ERROR("bta_av_co_audio_codec_reset A2D_BldSbcInfo failed");
     }
@@ -1243,8 +1205,6 @@ BOOLEAN bta_av_co_audio_set_codec(const tBTC_AV_MEDIA_FEEDINGS *p_feeding, tBTC_
     /* Supported codecs */
     switch (p_feeding->format) {
     case BTC_AV_CODEC_PCM:
-        new_cfg.id = BTC_AV_CODEC_SBC;
-
         sbc_config = btc_av_sbc_default_config;
         if ((p_feeding->cfg.pcm.num_channel != 1) &&
                 (p_feeding->cfg.pcm.num_channel != 2)) {
@@ -1323,7 +1283,7 @@ BOOLEAN bta_av_co_audio_get_sbc_config(tA2D_SBC_CIE *p_sbc_config, UINT16 *p_min
     *p_minmtu = 0xFFFF;
 
     osi_mutex_global_lock();
-    if (bta_av_co_cb.codec_cfg.id == BTC_AV_CODEC_SBC) {
+    if (A2DP_GetCodecType(bta_av_co_cb.codec_cfg.info) == BTC_AV_CODEC_SBC) {
         if (A2D_ParsSbcInfo(p_sbc_config, bta_av_co_cb.codec_cfg.info, FALSE) == A2D_SUCCESS) {
             for (index = 0; index < BTA_AV_CO_NUM_ELEMENTS(bta_av_co_cb.peers); index++) {
                 p_peer = &bta_av_co_cb.peers[index];
@@ -1404,7 +1364,7 @@ void bta_av_co_init(void)
     /* Reset the control block */
     memset(&bta_av_co_cb, 0, sizeof(bta_av_co_cb));
 
-    bta_av_co_cb.codec_cfg_setconfig.id = BTC_AV_CODEC_NONE;
+    memset(bta_av_co_cb.codec_cfg_setconfig.info, 0, AVDT_CODEC_SIZE);
 
 #if defined(BTA_AV_CO_CP_SCMS_T) && (BTA_AV_CO_CP_SCMS_T == TRUE)
     bta_av_co_cp_set_flag(BTA_AV_CP_SCMS_COPY_NEVER);
@@ -1467,7 +1427,7 @@ BOOLEAN bta_av_co_peer_cp_supported(tBTA_AV_HNDL hndl)
 BOOLEAN bta_av_co_get_remote_bitpool_pref(UINT8 *min, UINT8 *max)
 {
     /* check if remote peer did a set config */
-    if (bta_av_co_cb.codec_cfg_setconfig.id == BTC_AV_CODEC_NONE) {
+    if (A2DP_GetCodecType(bta_av_co_cb.codec_cfg_setconfig.info)!= BTC_AV_CODEC_SBC){
         return FALSE;
     }
 

@@ -161,7 +161,6 @@ typedef UINT8 tBTC_AV_CHANNEL_MODE;
  * Structure used to configure the AV codec capabilities/config
  */
 typedef struct {
-    tBTC_AV_CODEC_ID id;             /* Codec ID (in terms of BTC) */
     UINT8 info[AVDT_CODEC_SIZE];     /* Codec info (can be config or capabilities) */
 } tBTC_AV_CODEC_INFO;
 
