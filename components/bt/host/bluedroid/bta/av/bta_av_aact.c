@@ -1271,15 +1271,15 @@ void bta_av_setconfig_rsp (tBTA_AV_SCB *p_scb, tBTA_AV_DATA *p_data)
     if (AVDT_TSEP_SNK == local_sep) {
         if ((p_data->ci_setconfig.err_code == AVDT_SUCCESS) &&
             (p_scb->seps[p_scb->sep_idx].p_app_data_cback != NULL)) {
-                p_scb->seps[p_scb->sep_idx].p_app_data_cback(BTA_AV_MEDIA_SINK_CFG_EVT,
-                        (tBTA_AV_MEDIA *)p_scb->cfg.codec_info);
+                tBTA_AV_MEDIA arg;
+                arg.codec_info = p_scb->cfg.codec_info;
+                p_scb->seps[p_scb->sep_idx].p_app_data_cback(BTA_AV_MEDIA_SINK_CFG_EVT, &arg);
         }
         if (p_scb->cur_psc_mask & AVDT_PSC_DELAY_RPT) {
             psc_cfg.psc_mask |= BTA_AV_PSC_DEALY_RPT;
         }
         (*bta_av_cb.p_cback)(BTA_AV_SNK_PSC_CFG_EVT, (tBTA_AV *)&psc_cfg);
     }
-
 
     AVDT_ConfigRsp(p_scb->avdt_handle, p_scb->avdt_label, p_data->ci_setconfig.err_code,
                    p_data->ci_setconfig.category);
@@ -1901,8 +1901,9 @@ void bta_av_getcap_results (tBTA_AV_SCB *p_scb, tBTA_AV_DATA *p_data)
         if (uuid_int == UUID_SERVCLASS_AUDIO_SINK) {
            if (p_scb->seps[p_scb->sep_idx].p_app_data_cback != NULL) {
                 APPL_TRACE_DEBUG(" Configure Deoder for Sink Connection ");
-                p_scb->seps[p_scb->sep_idx].p_app_data_cback(BTA_AV_MEDIA_SINK_CFG_EVT,
-                        (tBTA_AV_MEDIA *)p_scb->cfg.codec_info);
+                tBTA_AV_MEDIA arg;
+                arg.codec_info = p_scb->cfg.codec_info;
+                p_scb->seps[p_scb->sep_idx].p_app_data_cback(BTA_AV_MEDIA_SINK_CFG_EVT, &arg);
             }
             if (p_scb->cur_psc_mask & AVDT_PSC_DELAY_RPT) {
                 psc_cfg.psc_mask |= BTA_AV_PSC_DEALY_RPT;

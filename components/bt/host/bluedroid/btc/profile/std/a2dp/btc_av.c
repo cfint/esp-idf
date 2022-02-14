@@ -1359,10 +1359,10 @@ static void bte_av_media_callback(tBTA_AV_EVT event, tBTA_AV_MEDIA *p_data)
 
     if (event == BTA_AV_MEDIA_SINK_CFG_EVT) {
         /* send a command to BT Media Task */
-        btc_a2dp_sink_reset_decoder((UINT8 *)p_data);
+        btc_a2dp_sink_reset_decoder(p_data->codec_info);
 
         /* currently only supportes SBC */
-        a2d_status = A2D_ParsSbcInfo(&sbc_cie, (UINT8 *)p_data, FALSE);
+        a2d_status = A2D_ParsSbcInfo(&sbc_cie, p_data->codec_info, FALSE);
         if (a2d_status == A2D_SUCCESS) {
             btc_msg_t msg;
             btc_av_args_t arg;
