@@ -19,7 +19,6 @@
 #include "osi/thread.h"
 #include "osi/fixed_queue.h"
 #include "stack/a2d_api.h"
-#include "stack/a2d_sbc.h"
 #include "bta/bta_av_api.h"
 #include "bta/bta_av_ci.h"
 #include "btc_av_co.h"
@@ -30,7 +29,6 @@
 #include "btc_av.h"
 #include "btc/btc_util.h"
 #include "esp_a2dp_api.h"
-#include "oi_codec_sbc.h"
 #include "oi_status.h"
 #include "osi/future.h"
 #include <assert.h>
@@ -99,9 +97,8 @@ typedef struct {
 typedef struct {
     tBTC_A2DP_SINK_CB   btc_aa_snk_cb;
     osi_thread_t        *btc_aa_snk_task_hdl;
-    OI_CODEC_SBC_DECODER_CONTEXT    context;
-    OI_UINT32           contextData[CODEC_DATA_WORDS(2, SBC_CODEC_FAST_FILTER_BUFFERS)];
-    OI_INT16            pcmData[15 * SBC_MAX_SAMPLES_PER_FRAME * SBC_MAX_CHANNELS];
+    const tA2DP_DECODER_INTERFACE* decoder;
+    unsigned char decode_buf[4096];
     a2dp_sink_media_pkt_seq_num_t   media_pkt_seq_num;
 } a2dp_sink_local_param_t;
 
@@ -132,7 +129,7 @@ void btc_a2dp_sink_reg_data_cb(esp_a2d_sink_data_cb_t callback)
     bt_aa_snk_data_cb = callback;
 }
 
-static inline void btc_a2d_data_cb_to_app(const uint8_t *data, uint32_t len)
+static inline void btc_a2d_data_cb_to_app(unsigned char *data, uint32_t len)
 {
     // todo: critical section protection
     if (bt_aa_snk_data_cb) {
@@ -234,6 +231,11 @@ void btc_a2dp_sink_shutdown(void)
 
     a2dp_sink_local_param.btc_aa_snk_task_hdl = NULL;
 
+    if (a2dp_sink_local_param.decoder && a2dp_sink_local_param.decoder->decoder_cleanup) {
+        a2dp_sink_local_param.decoder->decoder_cleanup();
+        a2dp_sink_local_param.decoder = NULL;
+    }
+
 #if A2D_DYNAMIC_MEMORY == TRUE
     osi_free(a2dp_sink_local_param_ptr);
     a2dp_sink_local_param_ptr = NULL;
@@ -329,6 +331,36 @@ void btc_a2dp_sink_reset_decoder(UINT8 *p_av)
         return;
     }
 
+    const tA2DP_DECODER_INTERFACE* decoder = A2DP_GetDecoderInterface((const uint8_t*)p_av);
+    if (!decoder) {
+        APPL_TRACE_ERROR("%s: Couldn't get decoder for codec %s", __func__,
+                         A2DP_CodecName(p_av));
+        return;
+    }
+
+    if (decoder != a2dp_sink_local_param.decoder) {
+        // De-initialize previous decoder
+        if (a2dp_sink_local_param.decoder && a2dp_sink_local_param.decoder->decoder_cleanup) {
+            a2dp_sink_local_param.decoder->decoder_cleanup();
+        }
+
+        // Initialize new decoder
+        a2dp_sink_local_param.decoder = decoder;
+        if (a2dp_sink_local_param.decoder->decoder_init &&
+            !a2dp_sink_local_param.decoder->decoder_init(btc_a2d_data_cb_to_app)) {
+            APPL_TRACE_ERROR("%s: Decoder failed to initialize", __func__);
+            return;
+        }
+    } else {
+        if (a2dp_sink_local_param.decoder->decoder_reset) {
+            a2dp_sink_local_param.decoder->decoder_reset();
+        }
+    }
+
+    if (a2dp_sink_local_param.decoder->decoder_configure){
+        a2dp_sink_local_param.decoder->decoder_configure((const uint8_t*)p_av);
+    }
+
     memcpy(p_buf->codec_info, p_av, AVDT_CODEC_SIZE);
     btc_a2dp_sink_ctrl(BTC_MEDIA_AUDIO_SINK_CFG_UPDATE, p_buf);
 }
@@ -379,128 +411,14 @@ static void btc_a2dp_sink_data_ready(UNUSED_ATTR void *context)
  *******************************************************************************/
 static void btc_a2dp_sink_handle_decoder_reset(tBTC_MEDIA_SINK_CFG_UPDATE *p_msg)
 {
-    tBTC_MEDIA_SINK_CFG_UPDATE *p_buf = p_msg;
-    tA2D_STATUS a2d_status;
-    tA2D_SBC_CIE sbc_cie;
-    OI_STATUS       status;
-    UINT32          freq_multiple = 48 * 20; /* frequency multiple for 20ms of data , initialize with 48K*/
-    UINT32          num_blocks = 16;
-    UINT32          num_subbands = 8;
-
-    APPL_TRACE_EVENT("%s p_codec_info[%x:%x:%x:%x:%x:%x]\n", __FUNCTION__,
-                     p_buf->codec_info[1], p_buf->codec_info[2], p_buf->codec_info[3],
-                     p_buf->codec_info[4], p_buf->codec_info[5], p_buf->codec_info[6]);
-
-    a2d_status = A2D_ParsSbcInfo(&sbc_cie, p_buf->codec_info, FALSE);
-    if (a2d_status != A2D_SUCCESS) {
-        APPL_TRACE_ERROR("ERROR dump_codec_info A2D_ParsSbcInfo fail:%d\n", a2d_status);
-        return;
-    }
-
     a2dp_sink_local_param.btc_aa_snk_cb.rx_flush = FALSE;
-    APPL_TRACE_EVENT("Reset to sink role");
-    status = OI_CODEC_SBC_DecoderReset(&a2dp_sink_local_param.context, a2dp_sink_local_param.contextData,
-                                        sizeof(a2dp_sink_local_param.contextData), a2dp_sink_local_param.btc_aa_snk_cb.channel_count,
-                                        a2dp_sink_local_param.btc_aa_snk_cb.channel_count, FALSE, FALSE);
-    if (!OI_SUCCESS(status)) {
-        APPL_TRACE_ERROR("OI_CODEC_SBC_DecoderReset failed with error code %d\n", status);
+    if (a2dp_sink_local_param.decoder->decoder_reset){
+        a2dp_sink_local_param.decoder->decoder_reset();
     }
-
+    if (a2dp_sink_local_param.decoder->decoder_configure){
+        a2dp_sink_local_param.decoder->decoder_configure(p_msg->codec_info);
+    }
     btc_a2dp_control_set_datachnl_stat(TRUE);
-
-    switch (sbc_cie.samp_freq) {
-    case A2D_SBC_IE_SAMP_FREQ_16:
-        APPL_TRACE_DEBUG("\tsamp_freq:%d (16000)\n", sbc_cie.samp_freq);
-        freq_multiple = 16 * 20;
-        break;
-    case A2D_SBC_IE_SAMP_FREQ_32:
-        APPL_TRACE_DEBUG("\tsamp_freq:%d (32000)\n", sbc_cie.samp_freq);
-        freq_multiple = 32 * 20;
-        break;
-    case A2D_SBC_IE_SAMP_FREQ_44:
-        APPL_TRACE_DEBUG("\tsamp_freq:%d (44100)\n", sbc_cie.samp_freq);
-        freq_multiple = 441 * 2;
-        break;
-    case A2D_SBC_IE_SAMP_FREQ_48:
-        APPL_TRACE_DEBUG("\tsamp_freq:%d (48000)\n", sbc_cie.samp_freq);
-        freq_multiple = 48 * 20;
-        break;
-    default:
-        APPL_TRACE_DEBUG(" Unknown Frequency ");
-        break;
-    }
-
-    switch (sbc_cie.ch_mode) {
-    case A2D_SBC_IE_CH_MD_MONO:
-        APPL_TRACE_DEBUG("\tch_mode:%d (Mono)\n", sbc_cie.ch_mode);
-        break;
-    case A2D_SBC_IE_CH_MD_DUAL:
-        APPL_TRACE_DEBUG("\tch_mode:%d (DUAL)\n", sbc_cie.ch_mode);
-        break;
-    case A2D_SBC_IE_CH_MD_STEREO:
-        APPL_TRACE_DEBUG("\tch_mode:%d (STEREO)\n", sbc_cie.ch_mode);
-        break;
-    case A2D_SBC_IE_CH_MD_JOINT:
-        APPL_TRACE_DEBUG("\tch_mode:%d (JOINT)\n", sbc_cie.ch_mode);
-        break;
-    default:
-        APPL_TRACE_DEBUG(" Unknown Mode ");
-        break;
-    }
-
-    switch (sbc_cie.block_len) {
-    case A2D_SBC_IE_BLOCKS_4:
-        APPL_TRACE_DEBUG("\tblock_len:%d (4)\n", sbc_cie.block_len);
-        num_blocks = 4;
-        break;
-    case A2D_SBC_IE_BLOCKS_8:
-        APPL_TRACE_DEBUG("\tblock_len:%d (8)\n", sbc_cie.block_len);
-        num_blocks = 8;
-        break;
-    case A2D_SBC_IE_BLOCKS_12:
-        APPL_TRACE_DEBUG("\tblock_len:%d (12)\n", sbc_cie.block_len);
-        num_blocks = 12;
-        break;
-    case A2D_SBC_IE_BLOCKS_16:
-        APPL_TRACE_DEBUG("\tblock_len:%d (16)\n", sbc_cie.block_len);
-        num_blocks = 16;
-        break;
-    default:
-        APPL_TRACE_DEBUG(" Unknown BlockLen ");
-        break;
-    }
-
-    switch (sbc_cie.num_subbands) {
-    case A2D_SBC_IE_SUBBAND_4:
-        APPL_TRACE_DEBUG("\tnum_subbands:%d (4)\n", sbc_cie.num_subbands);
-        num_subbands = 4;
-        break;
-    case A2D_SBC_IE_SUBBAND_8:
-        APPL_TRACE_DEBUG("\tnum_subbands:%d (8)\n", sbc_cie.num_subbands);
-        num_subbands = 8;
-        break;
-    default:
-        APPL_TRACE_DEBUG(" Unknown SubBands ");
-        break;
-    }
-
-    switch (sbc_cie.alloc_mthd) {
-    case A2D_SBC_IE_ALLOC_MD_S:
-        APPL_TRACE_DEBUG("\talloc_mthd:%d (SNR)\n", sbc_cie.alloc_mthd);
-        break;
-    case A2D_SBC_IE_ALLOC_MD_L:
-        APPL_TRACE_DEBUG("\talloc_mthd:%d (Loudness)\n", sbc_cie.alloc_mthd);
-        break;
-    default:
-        APPL_TRACE_DEBUG(" Unknown Allocation Method");
-        break;
-    }
-
-    APPL_TRACE_EVENT("\tBit pool Min:%d Max:%d\n", sbc_cie.min_bitpool, sbc_cie.max_bitpool);
-
-    int frames_to_process = ((freq_multiple) / (num_blocks * num_subbands)) + 1;
-    APPL_TRACE_EVENT(" Frames to be processed in 20 ms %d\n", frames_to_process);
-    UNUSED(frames_to_process);
 }
 
 /*******************************************************************************
@@ -514,14 +432,6 @@ static void btc_a2dp_sink_handle_decoder_reset(tBTC_MEDIA_SINK_CFG_UPDATE *p_msg
  *******************************************************************************/
 static void btc_a2dp_sink_handle_inc_media(BT_HDR *p_msg)
 {
-    UINT8 *sbc_start_frame = ((UINT8 *)(p_msg + 1) + p_msg->offset + 1);
-    int count;
-    UINT32 pcmBytes, availPcmBytes;
-    OI_INT16 *pcmDataPointer = a2dp_sink_local_param.pcmData; /*Will be overwritten on next packet receipt*/
-    OI_STATUS status;
-    int num_sbc_frames = (*((UINT8 *)(p_msg + 1) + p_msg->offset)) & 0x0f;
-    UINT32 sbc_frame_len = p_msg->len - 1;
-    availPcmBytes = sizeof(a2dp_sink_local_param.pcmData);
 
     /* XXX: Check if the below check is correct, we are checking for peer to be sink when we are sink */
     if (btc_av_get_peer_sep() == AVDT_TSEP_SNK || (a2dp_sink_local_param.btc_aa_snk_cb.rx_flush)) {
@@ -548,23 +458,19 @@ static void btc_a2dp_sink_handle_inc_media(BT_HDR *p_msg)
 
     APPL_TRACE_DEBUG("Number of sbc frames %d, frame_len %d\n", num_sbc_frames, sbc_frame_len);
 
-    for (count = 0; count < num_sbc_frames && sbc_frame_len != 0; count ++) {
-        pcmBytes = availPcmBytes;
-        status = OI_CODEC_SBC_DecodeFrame(&a2dp_sink_local_param.context, (const OI_BYTE **)&sbc_start_frame,
-                                          (OI_UINT32 *)&sbc_frame_len,
-                                          (OI_INT16 *)pcmDataPointer,
-                                          (OI_UINT32 *)&pcmBytes);
-        if (!OI_SUCCESS(status)) {
-            APPL_TRACE_ERROR("Decoding failure: %d\n", status);
-            break;
+
+    if (a2dp_sink_local_param.decoder->decode_packet_header) {
+        ssize_t res = a2dp_sink_local_param.decoder->decode_packet_header(p_msg);
+        if (res < 0) {
+            return;
         }
-        availPcmBytes -= pcmBytes;
-        pcmDataPointer += pcmBytes / 2;
-        p_msg->offset += (p_msg->len - 1) - sbc_frame_len;
-        p_msg->len = sbc_frame_len + 1;
     }
 
-    btc_a2d_data_cb_to_app((uint8_t *)a2dp_sink_local_param.pcmData, (sizeof(a2dp_sink_local_param.pcmData) - availPcmBytes));
+    if (a2dp_sink_local_param.decoder->decode_packet) {
+        unsigned char* buf = a2dp_sink_local_param.decode_buf;
+        size_t buf_len = sizeof(a2dp_sink_local_param.decode_buf);
+        a2dp_sink_local_param.decoder->decode_packet(p_msg, buf, buf_len);
+    }
 }
 
 /*******************************************************************************
