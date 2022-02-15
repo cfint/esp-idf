@@ -17,6 +17,8 @@
 #include "common/bt_defs.h"
 #include "osi/allocator.h"
 #include "stack/btu.h"
+#include "bt_av.h"
+#include "stack/a2dp_codec_api.h"
 #include "bta/bta_av_api.h"
 #include "btc/btc_dm.h"
 #include "btc/btc_common.h"
@@ -1426,8 +1428,6 @@ static void bte_av_media_callback(tBTA_AV_EVT event, tBTA_AV_MEDIA *p_data)
 {
     btc_sm_state_t state;
     UINT8 que_len;
-    tA2D_STATUS a2d_status;
-    tA2D_SBC_CIE sbc_cie;
 
     if (event == BTA_AV_MEDIA_DATA_EVT) { /* Switch to BTC_MEDIA context */
         state = btc_sm_get_state(btc_av_cb.sm_handle);
@@ -1444,9 +1444,8 @@ static void bte_av_media_callback(tBTA_AV_EVT event, tBTA_AV_MEDIA *p_data)
         /* send a command to BT Media Task */
         btc_a2dp_sink_reset_decoder(p_data->codec_info);
 
-        /* currently only supportes SBC */
-        a2d_status = A2D_ParsSbcInfo(&sbc_cie, p_data->codec_info, FALSE);
-        if (a2d_status == A2D_SUCCESS) {
+
+        if (A2DP_IsPeerSourceCodecSupported(p_data->codec_info)) {
             btc_msg_t msg;
             btc_av_args_t arg;
 
@@ -1454,12 +1453,23 @@ static void bte_av_media_callback(tBTA_AV_EVT event, tBTA_AV_MEDIA *p_data)
             msg.pid = BTC_PID_A2DP;
             msg.act = BTC_AV_SINK_CONFIG_REQ_EVT;
 
-            memset(&arg, 0, sizeof(btc_av_args_t));
-            arg.mcc.type = ESP_A2D_MCT_SBC;
-            memcpy(arg.mcc.cie.sbc, (uint8_t *)p_data + 3, ESP_A2D_CIE_LEN_SBC);
+            memset(&arg.mcc, 0, sizeof(esp_a2d_mcc_t));
+            arg.mcc.type = A2DP_GetCodecType(p_data->codec_info);
+
+            /*
+             * codec_info is valid here. The first byte is the size of the array.
+             * Skip the header and pass the codec specific information elements
+             * to the application.
+             */
+            size_t len = (p_data->codec_info[0] + 1) - AVDT_CODEC_HEADER_SIZE;
+            len = len < (AVDT_CODEC_SIZE - AVDT_CODEC_HEADER_SIZE) ?
+                  len : (AVDT_CODEC_SIZE - AVDT_CODEC_HEADER_SIZE);
+            memcpy(&arg.mcc.cie, p_data->codec_info + AVDT_CODEC_HEADER_SIZE, len);
+
             btc_transfer_context(&msg, &arg, sizeof(btc_av_args_t), NULL, NULL);
         } else {
-            BTC_TRACE_ERROR("ERROR dump_codec_info A2D_ParsSbcInfo fail:%d\n", a2d_status);
+            BTC_TRACE_ERROR("Unsupported source codec %s",
+                            A2DP_CodecName(p_data->codec_info));
         }
     }
     UNUSED(que_len);

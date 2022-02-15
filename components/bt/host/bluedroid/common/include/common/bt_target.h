@@ -1911,6 +1911,10 @@
 #define AVDT_CODEC_SIZE             10
 #endif
 
+#ifndef AVDT_CODEC_HEADER_SIZE
+#define AVDT_CODEC_HEADER_SIZE      3
+#endif
+
 /* Maximum size in bytes of the content protection information element. */
 #ifndef AVDT_PROTECT_SIZE
 #define AVDT_PROTECT_SIZE           90
