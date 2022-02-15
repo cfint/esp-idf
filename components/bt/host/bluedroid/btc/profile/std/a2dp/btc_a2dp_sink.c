@@ -86,13 +86,6 @@ typedef struct {
 } a2dp_sink_task_evt_t;
 
 typedef struct {
-    UINT16 num_frames_to_be_processed;
-    UINT16 len;
-    UINT16 offset;
-    UINT16 layer_specific;
-} tBT_SBC_HDR;
-
-typedef struct {
     BOOLEAN rx_flush; /* discards any incoming data when true */
     struct osi_event *data_ready_event;
     fixed_queue_t *RxSbcQ;
@@ -117,7 +110,7 @@ static void btc_a2dp_sink_thread_cleanup(UNUSED_ATTR void *context);
 static void btc_a2dp_sink_flush_q(fixed_queue_t *p_q);
 static void btc_a2dp_sink_rx_flush(void);
 /* Handle incoming media packets A2DP SINK streaming*/
-static void btc_a2dp_sink_handle_inc_media(tBT_SBC_HDR *p_msg);
+static void btc_a2dp_sink_handle_inc_media(BT_HDR *p_msg);
 static void btc_a2dp_sink_handle_decoder_reset(tBTC_MEDIA_SINK_CFG_UPDATE *p_msg);
 static void btc_a2dp_sink_handle_clear_track(void);
 static BOOLEAN btc_a2dp_sink_clear_track(void);
@@ -342,7 +335,7 @@ void btc_a2dp_sink_reset_decoder(UINT8 *p_av)
 
 static void btc_a2dp_sink_data_ready(UNUSED_ATTR void *context)
 {
-    tBT_SBC_HDR *p_msg;
+    BT_HDR *p_msg;
     int nb_of_msgs_to_process = 0;
 
     if (fixed_queue_is_empty(a2dp_sink_local_param.btc_aa_snk_cb.RxSbcQ)) {
@@ -358,7 +351,7 @@ static void btc_a2dp_sink_data_ready(UNUSED_ATTR void *context)
             if (btc_a2dp_sink_state != BTC_A2DP_SINK_STATE_ON){
                 return;
             }
-            p_msg = (tBT_SBC_HDR *)fixed_queue_dequeue(a2dp_sink_local_param.btc_aa_snk_cb.RxSbcQ, 0);
+            p_msg = (BT_HDR *)fixed_queue_dequeue(a2dp_sink_local_param.btc_aa_snk_cb.RxSbcQ, 0);
             if ( p_msg == NULL ) {
                 APPL_TRACE_ERROR("Insufficient data in que ");
                 break;
@@ -519,14 +512,14 @@ static void btc_a2dp_sink_handle_decoder_reset(tBTC_MEDIA_SINK_CFG_UPDATE *p_msg
  ** Returns          void
  **
  *******************************************************************************/
-static void btc_a2dp_sink_handle_inc_media(tBT_SBC_HDR *p_msg)
+static void btc_a2dp_sink_handle_inc_media(BT_HDR *p_msg)
 {
     UINT8 *sbc_start_frame = ((UINT8 *)(p_msg + 1) + p_msg->offset + 1);
     int count;
     UINT32 pcmBytes, availPcmBytes;
     OI_INT16 *pcmDataPointer = a2dp_sink_local_param.pcmData; /*Will be overwritten on next packet receipt*/
     OI_STATUS status;
-    int num_sbc_frames = p_msg->num_frames_to_be_processed;
+    int num_sbc_frames = (*((UINT8 *)(p_msg + 1) + p_msg->offset)) & 0x0f;
     UINT32 sbc_frame_len = p_msg->len - 1;
     availPcmBytes = sizeof(a2dp_sink_local_param.pcmData);
 
@@ -620,7 +613,7 @@ static void btc_a2dp_sink_rx_flush(void)
  *******************************************************************************/
 UINT8 btc_a2dp_sink_enque_buf(BT_HDR *p_pkt)
 {
-    tBT_SBC_HDR *p_msg;
+    BT_HDR *p_msg;
 
     if (btc_a2dp_sink_state != BTC_A2DP_SINK_STATE_ON){
         return 0;
@@ -638,11 +631,9 @@ UINT8 btc_a2dp_sink_enque_buf(BT_HDR *p_pkt)
     APPL_TRACE_DEBUG("btc_a2dp_sink_enque_buf + ");
 
     /* allocate and Queue this buffer */
-    if ((p_msg = (tBT_SBC_HDR *) osi_malloc(sizeof(tBT_SBC_HDR) +
+    if ((p_msg = (BT_HDR *) osi_malloc(sizeof(BT_HDR) +
                                             p_pkt->offset + p_pkt->len)) != NULL) {
         memcpy(p_msg, p_pkt, (sizeof(BT_HDR) + p_pkt->offset + p_pkt->len));
-        p_msg->num_frames_to_be_processed = (*((UINT8 *)(p_msg + 1) + p_msg->offset)) & 0x0f;
-        APPL_TRACE_VERBOSE("btc_a2dp_sink_enque_buf %d + \n", p_msg->num_frames_to_be_processed);
         fixed_queue_enqueue(a2dp_sink_local_param.btc_aa_snk_cb.RxSbcQ, p_msg, FIXED_QUEUE_MAX_TIMEOUT);
         osi_thread_post_event(a2dp_sink_local_param.btc_aa_snk_cb.data_ready_event, OSI_THREAD_MAX_TIMEOUT);
     } else {
