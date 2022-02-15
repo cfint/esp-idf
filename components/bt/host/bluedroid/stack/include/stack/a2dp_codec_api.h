@@ -13,6 +13,42 @@
 
 #include "stack/a2d_api.h"
 
+// Prototype for a callback to receive decoded audio data from a
+// tA2DP_DECODER_INTERFACE|.
+// |buf| is a pointer to the data.
+// |len| is the number of octets pointed to by |buf|.
+typedef void (*decoded_data_callback_t)(uint8_t* buf, uint32_t len);
+
+//
+// A2DP decoder callbacks interface.
+//
+typedef struct {
+  // Initialize the decoder. Can be called multiple times, will reinitalize.
+  bool (*decoder_init)(decoded_data_callback_t decode_callback);
+
+  // Cleanup the A2DP decoder.
+  void (*decoder_cleanup)();
+
+  // Reset the A2DP decoder.
+  bool (*decoder_reset)();
+
+  // Decodes codec header in |p_buf|.
+  ssize_t (*decode_packet_header)(BT_HDR* p_buf);
+
+  // Decodes |p_buf| and calls |decode_callback| passed into init for the
+  // decoded data.
+  bool (*decode_packet)(BT_HDR* p_buf, unsigned char* buf, size_t buf_len);
+
+  // Start the A2DP decoder.
+  void (*decoder_start)();
+
+  // Suspend the A2DP decoder.
+  void (*decoder_suspend)();
+
+  // A2DP decoder configuration.
+  void (*decoder_configure)(const uint8_t* p_codec_info);
+} tA2DP_DECODER_INTERFACE;
+
 
 /******************************************************************************
 **

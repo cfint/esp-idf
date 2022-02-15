@@ -89,6 +89,14 @@ tA2D_STATUS A2DP_IsPeerSourceCodecSupported(const uint8_t* p_codec_info) {
   return A2D_FAIL;
 }
 
+const tA2DP_DECODER_INTERFACE* A2DP_GetDecoderInterface(
+    const uint8_t* p_codec_info) {
+  tA2D_CODEC_TYPE codec_type = A2DP_GetCodecType(p_codec_info);
+
+  LOG_ERROR("%s: unsupported codec type 0x%x", __func__, codec_type);
+  return NULL;
+}
+
 btav_a2dp_codec_index_t A2DP_SinkCodecIndex(const uint8_t* p_codec_info) {
   tA2D_CODEC_TYPE codec_type = A2DP_GetCodecType(p_codec_info);
 
