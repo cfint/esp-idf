@@ -94,10 +94,8 @@ typedef struct {
 
 typedef struct {
     BOOLEAN rx_flush; /* discards any incoming data when true */
-    UINT8   channel_count;
     struct osi_event *data_ready_event;
     fixed_queue_t *RxSbcQ;
-    UINT32  sample_rate;
 } tBTC_A2DP_SINK_CB;
 
 typedef struct {
@@ -118,8 +116,6 @@ static void btc_a2dp_sink_thread_init(UNUSED_ATTR void *context);
 static void btc_a2dp_sink_thread_cleanup(UNUSED_ATTR void *context);
 static void btc_a2dp_sink_flush_q(fixed_queue_t *p_q);
 static void btc_a2dp_sink_rx_flush(void);
-static int btc_a2dp_sink_get_track_frequency(UINT8 frequency);
-static int btc_a2dp_sink_get_track_channel_count(UINT8 channeltype);
 /* Handle incoming media packets A2DP SINK streaming*/
 static void btc_a2dp_sink_handle_inc_media(tBT_SBC_HDR *p_msg);
 static void btc_a2dp_sink_handle_decoder_reset(tBTC_MEDIA_SINK_CFG_UPDATE *p_msg);
@@ -408,9 +404,6 @@ static void btc_a2dp_sink_handle_decoder_reset(tBTC_MEDIA_SINK_CFG_UPDATE *p_msg
         return;
     }
 
-    a2dp_sink_local_param.btc_aa_snk_cb.sample_rate = btc_a2dp_sink_get_track_frequency(sbc_cie.samp_freq);
-    a2dp_sink_local_param.btc_aa_snk_cb.channel_count = btc_a2dp_sink_get_track_channel_count(sbc_cie.ch_mode);
-
     a2dp_sink_local_param.btc_aa_snk_cb.rx_flush = FALSE;
     APPL_TRACE_EVENT("Reset to sink role");
     status = OI_CODEC_SBC_DecoderReset(&a2dp_sink_local_param.context, a2dp_sink_local_param.contextData,
@@ -614,42 +607,6 @@ static void btc_a2dp_sink_rx_flush(void)
     APPL_TRACE_DEBUG("btc_a2dp_sink_rx_flush");
 
     btc_a2dp_sink_flush_q(a2dp_sink_local_param.btc_aa_snk_cb.RxSbcQ);
-}
-
-static int btc_a2dp_sink_get_track_frequency(UINT8 frequency)
-{
-    int freq = 48000;
-    switch (frequency) {
-    case A2D_SBC_IE_SAMP_FREQ_16:
-        freq = 16000;
-        break;
-    case A2D_SBC_IE_SAMP_FREQ_32:
-        freq = 32000;
-        break;
-    case A2D_SBC_IE_SAMP_FREQ_44:
-        freq = 44100;
-        break;
-    case A2D_SBC_IE_SAMP_FREQ_48:
-        freq = 48000;
-        break;
-    }
-    return freq;
-}
-
-static int btc_a2dp_sink_get_track_channel_count(UINT8 channeltype)
-{
-    int count = 1;
-    switch (channeltype) {
-    case A2D_SBC_IE_CH_MD_MONO:
-        count = 1;
-        break;
-    case A2D_SBC_IE_CH_MD_DUAL:
-    case A2D_SBC_IE_CH_MD_STEREO:
-    case A2D_SBC_IE_CH_MD_JOINT:
-        count = 2;
-        break;
-    }
-    return count;
 }
 
 /*******************************************************************************
