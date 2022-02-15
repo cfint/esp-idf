@@ -16,10 +16,18 @@
 ********************************************************************************/
 
 enum {
+    BTC_SV_AV_AA_SOURCE_MIN = 0,
     BTC_SV_AV_AA_SBC_INDEX = 0,
-    BTC_SV_AV_AA_SBC_SINK_INDEX,
-    BTC_SV_AV_AA_SEP_INDEX  /* Last index */
+    BTC_SV_AV_AA_SOURCE_MAX,
+    BTC_SV_AV_AA_SINK_MIN = BTC_SV_AV_AA_SOURCE_MAX,
+    BTC_SV_AV_AA_SBC_SINK_INDEX = BTC_SV_AV_AA_SINK_MIN,
+    BTC_SV_AV_AA_SINK_MAX
 };
+
+#define BTC_SV_AV_AA_SOURCE_COUNT (BTC_SV_AV_AA_SOURCE_MAX - \
+                                   BTC_SV_AV_AA_SOURCE_MIN)
+#define BTC_SV_AV_AA_SINK_COUNT (BTC_SV_AV_AA_SINK_MAX - \
+                                 BTC_SV_AV_AA_SINK_MIN)
 
 /*****************************************************************************
 **  Local data
@@ -35,8 +43,8 @@ typedef struct {
 
 typedef struct {
     BD_ADDR         addr;               /* address of audio/video peer */
-    tBTA_AV_CO_SINK snks[BTC_SV_AV_AA_SEP_INDEX]; /* array of supported sinks */
-    tBTA_AV_CO_SINK srcs[BTC_SV_AV_AA_SEP_INDEX]; /* array of supported srcs */
+    tBTA_AV_CO_SINK snks[BTC_SV_AV_AA_SINK_COUNT]; /* array of supported sinks */
+    tBTA_AV_CO_SINK srcs[BTC_SV_AV_AA_SOURCE_COUNT]; /* array of supported srcs */
     UINT8           num_snks;           /* total number of sinks at peer */
     UINT8           num_srcs;           /* total number of srcs at peer */
     UINT8           num_seps;           /* total number of seids at peer */
