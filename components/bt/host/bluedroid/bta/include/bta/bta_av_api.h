@@ -118,7 +118,7 @@ typedef UINT8 tBTA_AV_HNDL;
 #define BTA_AV_CODEC_MPEG4      VDP_MEDIA_CT_MPEG4      /* MPEG-4 Visual Simple Profile */
 #define BTA_AV_CODEC_H263_P3    VDP_MEDIA_CT_H263_P3    /* H.263 profile 3 */
 #define BTA_AV_CODEC_H263_P8    VDP_MEDIA_CT_H263_P8    /* H.263 profile 8 */
-#define BTA_AV_CODEC_VEND       VDP_MEDIA_CT_VEND       /* Non-VDP */
+#define BTA_AV_CODEC_VEND       A2D_MEDIA_CT_NON_A2DP   /* Non-VDP */
 
 typedef UINT8 tBTA_AV_CODEC;
 
