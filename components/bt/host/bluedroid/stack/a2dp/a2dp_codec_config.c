@@ -8,6 +8,7 @@
 #include "stack/a2d_api.h"
 #include "stack/a2d_sbc.h"
 #include "stack/a2dp_codec_api.h"
+#include "stack/a2dp_vendor.h"
 #include "bta/bta_av_api.h"
 #include "bta/bta_av_ci.h"
 #include "bta/bta_av_co.h"
@@ -35,6 +36,8 @@ tA2D_STATUS A2DP_ParseInfo(uint8_t* p_ie, const uint8_t* p_codec_info,
   switch (codec_type) {
     case A2D_MEDIA_CT_SBC:
       return A2D_ParsSbcInfo((tA2D_SBC_CIE*)p_ie, (UINT8*)p_codec_info, is_capability);
+    case A2D_MEDIA_CT_NON_A2DP:
+      return A2DP_VendorParseInfo(p_ie, p_codec_info, is_capability);
     default:
       break;
   }
@@ -50,6 +53,8 @@ bool A2DP_IsPeerSinkCodecValid(const uint8_t* p_codec_info) {
   switch (codec_type) {
     case A2D_MEDIA_CT_SBC:
       return A2DP_IsPeerSinkCodecValidSbc(p_codec_info);
+    case A2D_MEDIA_CT_NON_A2DP:
+      return A2DP_IsVendorPeerSinkCodecValid(p_codec_info);
     default:
       break;
   }
@@ -65,6 +70,8 @@ tA2D_STATUS A2DP_IsSinkCodecSupported(const uint8_t* p_codec_info) {
   switch (codec_type) {
     case A2D_MEDIA_CT_SBC:
       return A2DP_IsSinkCodecSupportedSbc(p_codec_info);
+    case A2D_MEDIA_CT_NON_A2DP:
+      return A2DP_IsVendorSinkCodecSupported(p_codec_info);
     default:
       break;
   }
@@ -81,6 +88,8 @@ tA2D_STATUS A2DP_IsPeerSourceCodecSupported(const uint8_t* p_codec_info) {
   switch (codec_type) {
     case A2D_MEDIA_CT_SBC:
       return A2DP_IsPeerSourceCodecSupportedSbc(p_codec_info);
+    case A2D_MEDIA_CT_NON_A2DP:
+      return A2DP_IsVendorPeerSourceCodecSupported(p_codec_info);
     default:
       break;
   }
@@ -132,6 +141,8 @@ btav_a2dp_codec_index_t A2DP_SourceCodecIndex(const uint8_t* p_codec_info) {
   switch (codec_type) {
     case A2D_MEDIA_CT_SBC:
       return A2DP_SourceCodecIndexSbc(p_codec_info);
+    case A2D_MEDIA_CT_NON_A2DP:
+      return A2DP_VendorSourceCodecIndex(p_codec_info);
     default:
       break;
   }
@@ -148,6 +159,10 @@ bool A2DP_InitCodecConfig(btav_a2dp_codec_index_t codec_index, UINT8 *p_result) 
     return true;
   }
 
+  if (A2DP_VendorInitCodecConfig(codec_index, p_result)) {
+    return true;
+  }
+
   LOG_ERROR("%s: unsupported codec index %u", __func__, codec_index);
   return false;
 }
@@ -160,6 +175,8 @@ bool A2DP_BuildCodecConfig(UINT8 *p_src_cap, UINT8 *p_result) {
   switch (codec_type) {
     case A2D_MEDIA_CT_SBC:
       return A2DP_BuildCodecConfigSbc(p_src_cap, p_result);
+    case A2D_MEDIA_CT_NON_A2DP:
+      return A2DP_VendorBuildCodecConfig(p_src_cap, p_result);
     default:
       LOG_ERROR("%s: unsupported codec type 0x%x", __func__, codec_type);
       return false;
@@ -174,6 +191,8 @@ const char* A2DP_CodecName(const uint8_t* p_codec_info) {
   switch (codec_type) {
     case A2D_MEDIA_CT_SBC:
       return A2DP_CodecNameSbc(p_codec_info);
+    case A2D_MEDIA_CT_NON_A2DP:
+      return A2DP_VendorCodecName(p_codec_info);
     default:
       break;
   }
@@ -192,6 +211,8 @@ bool A2DP_CodecTypeEquals(const uint8_t* p_codec_info_a,
   switch (codec_type_a) {
     case A2D_MEDIA_CT_SBC:
       return A2DP_CodecTypeEqualsSbc(p_codec_info_a, p_codec_info_b);
+    case A2D_MEDIA_CT_NON_A2DP:
+      return A2DP_VendorCodecTypeEquals(p_codec_info_a, p_codec_info_b);
     default:
       break;
   }
