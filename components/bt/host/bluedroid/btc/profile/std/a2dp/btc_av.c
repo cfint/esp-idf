@@ -161,6 +161,7 @@ static const btc_sm_handler_t btc_av_state_handlers[] = {
 };
 
 static void btc_av_event_free_data(btc_msg_t *msg);
+static void btc_av_event_open_evt(void *p_data);
 
 /*************************************************************************
 ** Extern functions
@@ -414,6 +415,10 @@ static BOOLEAN btc_av_state_idle_handler(btc_sm_event_t event, void *p_data)
         param.a2d_get_delay_value_stat.delay_value = ((tBTA_AV *)p_data)->delay.delay_value;
         btc_a2d_cb_to_app(ESP_A2D_SNK_GET_DELAY_VALUE_EVT, &param);
 #endif /* BTC_AV_SINK_INCLUDED */
+        break;
+
+    case BTA_AV_OPEN_EVT:
+        btc_av_event_open_evt(p_data);
         break;
 
     default:
@@ -1086,6 +1091,49 @@ static void btc_av_event_free_data(btc_msg_t *msg)
     default:
         break;
     }
+}
+
+static void btc_av_event_open_evt(void *p_data)
+{
+    tBTA_AV *p_bta_data = (tBTA_AV *)p_data;
+    esp_a2d_connection_state_t conn_stat;
+    btc_sm_state_t av_state;
+    BTC_TRACE_DEBUG("status:%d, edr 0x%x, peer sep %d\n", p_bta_data->open.status,
+                    p_bta_data->open.edr, p_bta_data->open.sep);
+
+    if (p_bta_data->open.status == BTA_AV_SUCCESS) {
+        btc_av_cb.edr = p_bta_data->open.edr;
+        btc_av_cb.peer_sep = p_bta_data->open.sep;
+
+        conn_stat = ESP_A2D_CONNECTION_STATE_CONNECTED;
+        av_state = BTC_AV_STATE_OPENED;
+    } else {
+        BTC_TRACE_WARNING("BTA_AV_OPEN_EVT::FAILED status: %d\n", p_bta_data->open.status);
+
+        conn_stat = ESP_A2D_CONNECTION_STATE_DISCONNECTED;
+        av_state = BTC_AV_STATE_IDLE;
+    }
+    /* inform the application of the event */
+    btc_report_connection_state(conn_stat, &(btc_av_cb.peer_bda), 0);
+    /* change state to open/idle based on the status */
+    btc_sm_change_state(btc_av_cb.sm_handle, av_state);
+
+    if (btc_av_cb.peer_sep == AVDT_TSEP_SNK) {
+        /* if queued PLAY command,  send it now */
+        /* necessary to add this?
+        btc_rc_check_handle_pending_play(p_bta_data->open.bd_addr,
+                                         (p_bta_data->open.status == BTA_AV_SUCCESS));
+        */
+    } else if (btc_av_cb.peer_sep == AVDT_TSEP_SRC &&
+               (p_bta_data->open.status == BTA_AV_SUCCESS)) {
+        /* Bring up AVRCP connection too if AVRC Initialized */
+        if(g_av_with_rc) {
+            BTA_AvOpenRc(btc_av_cb.bta_handle);
+        } else {
+            BTC_TRACE_WARNING("AVRC not Init, not using it.");
+        }
+    }
+    btc_queue_advance();
 }
 
 /*******************************************************************************
