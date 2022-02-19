@@ -817,6 +817,15 @@ static BOOLEAN btc_av_state_opened_handler(btc_sm_event_t event, void *p_data)
         btc_queue_advance();
         break;
 
+    case BTC_AV_SINK_CONFIG_REQ_EVT: {
+        if (btc_av_cb.peer_sep == AVDT_TSEP_SRC) {
+            esp_a2d_cb_param_t param;
+            memcpy(param.audio_cfg.remote_bda, &btc_av_cb.peer_bda, sizeof(esp_bd_addr_t));
+            memcpy(&param.audio_cfg.mcc, p_data, sizeof(esp_a2d_mcc_t));
+            btc_a2d_cb_to_app(ESP_A2D_AUDIO_CFG_EVT, &param);
+        }
+    } break;
+
     CHECK_RC_EVENT(event, p_data);
 
     case BTA_AV_SNK_PSC_CFG_EVT:
