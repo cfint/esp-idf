@@ -426,6 +426,15 @@ static BOOLEAN btc_av_state_idle_handler(btc_sm_event_t event, void *p_data)
         btc_av_event_open_evt(p_data);
         break;
 
+    case BTC_AV_SINK_CONFIG_REQ_EVT: {
+        if (btc_av_cb.peer_sep == AVDT_TSEP_SRC) {
+            esp_a2d_cb_param_t param;
+            memcpy(param.audio_cfg.remote_bda, &btc_av_cb.peer_bda, sizeof(esp_bd_addr_t));
+            memcpy(&param.audio_cfg.mcc, p_data, sizeof(esp_a2d_mcc_t));
+            btc_a2d_cb_to_app(ESP_A2D_AUDIO_CFG_EVT, &param);
+        }
+    } break;
+
     default:
         BTC_TRACE_WARNING("%s : unhandled event:%s\n", __FUNCTION__,
                  dump_av_sm_event_name(event));
