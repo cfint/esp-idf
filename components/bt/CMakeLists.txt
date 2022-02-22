@@ -736,6 +736,13 @@ if(CONFIG_BT_ENABLED)
 
 endif()
 
+if(CONFIG_BT_A2DP_APTX_DECODER)
+    list(APPEND priv_include_dirs host/bluedroid/external/libfreeaptx)
+    list(APPEND aptx_dec_srcs "host/bluedroid/external/libfreeaptx/freeaptx.c")
+    list(APPEND srcs ${aptx_dec_srcs})
+
+endif()
+
 idf_component_register(SRCS "${srcs}"
                        INCLUDE_DIRS "${include_dirs}"
                        PRIV_INCLUDE_DIRS "${priv_include_dirs}"

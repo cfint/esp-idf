@@ -72,6 +72,9 @@
 #define BTA_AV_SINK_INCLUDED        TRUE
 #define BTC_AV_SINK_INCLUDED        TRUE
 #define SBC_DEC_INCLUDED            TRUE
+#if (UC_BT_A2DP_APTX_DECODER_ENABLED == TRUE)
+#define APTX_DEC_INCLUDED         TRUE
+#endif /* (UC_BT_A2DP_APTX_DECODER_ENABLED == TRUE) */
 #define BTC_AV_SRC_INCLUDED         TRUE
 #define SBC_ENC_INCLUDED            TRUE
 #endif /* UC_BT_A2DP_ENABLED */

@@ -61,6 +61,13 @@ config BT_A2DP_ENABLE
     help
         Advanced Audio Distrubution Profile
 
+config BT_A2DP_APTX_DECODER
+    bool "aptX decoder"
+    depends on BT_A2DP_ENABLE
+    default n
+    help
+        A2DP aptX decoder
+
 config BT_SPP_ENABLED
     bool "SPP"
     depends on BT_CLASSIC_ENABLED
