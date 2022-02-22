@@ -29,6 +29,7 @@
 #include "stack/a2d_api.h"
 #include "a2d_int.h"
 #include "stack/a2d_sbc.h"
+#include "stack/a2d_sbc_decoder.h"
 #include "stack/a2dp_codec_api.h"
 #include "common/bt_defs.h"
 
@@ -72,6 +73,17 @@ const tA2D_SBC_CIE a2dp_sbc_default_config = {
     A2D_SBC_IE_ALLOC_MD_L,          /* alloc_mthd */
     BTA_AV_CO_SBC_MAX_BITPOOL,      /* max_bitpool */
     A2D_SBC_IE_MIN_BITPOOL          /* min_bitpool */
+};
+
+static const tA2DP_DECODER_INTERFACE a2dp_decoder_interface_sbc = {
+    a2dp_sbc_decoder_init,
+    a2dp_sbc_decoder_cleanup,
+    a2dp_sbc_decoder_reset,
+    a2dp_sbc_decoder_decode_packet_header,
+    a2dp_sbc_decoder_decode_packet,
+    NULL,  // decoder_start
+    NULL,  // decoder_suspend
+    a2dp_sbc_decoder_configure,
 };
 
 static tA2D_STATUS A2DP_CodecInfoMatchesCapabilitySbc(
@@ -494,6 +506,13 @@ bool A2DP_BuildCodecConfigSbc(UINT8 *p_src_cap, UINT8 *p_result) {
 
     status = A2D_BldSbcInfo(A2D_MEDIA_TYPE_AUDIO, (tA2D_SBC_CIE *) &pref_cap, p_result);
     return status == A2D_SUCCESS;
+}
+
+const tA2DP_DECODER_INTERFACE* A2DP_GetDecoderInterfaceSbc(
+    const uint8_t* p_codec_info) {
+  if (!A2DP_IsSinkCodecValidSbc(p_codec_info)) return NULL;
+
+  return &a2dp_decoder_interface_sbc;
 }
 
 #endif /* #if (defined(A2D_INCLUDED) && A2D_INCLUDED == TRUE) */

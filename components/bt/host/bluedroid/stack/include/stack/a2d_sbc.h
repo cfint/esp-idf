@@ -26,6 +26,7 @@
 
 #include "bt_av.h"
 #include "a2d_api.h"
+#include "a2dp_codec_api.h"
 
 #if (A2D_INCLUDED == TRUE)
 /*****************************************************************************
@@ -373,6 +374,22 @@ bool A2DP_InitCodecConfigSbcSrc(uint8_t* p_codec_info);
 **
 ******************************************************************************/
 bool A2DP_BuildCodecConfigSbc(UINT8 *p_src_cap, UINT8 *p_result);
+
+/******************************************************************************
+**
+** Function         A2DP_GetDecoderInterfaceSbc
+**
+** Description      Gets the A2DP SBC decoder interface that can be used to decode received A2DP
+**                  packets
+**
+**                      p_codec_info:  contains the codec information.
+**
+** Returns          the A2DP SBC decoder interface if the |p_codec_info| is valid and
+**                  supported, otherwise NULL.
+**
+******************************************************************************/
+const tA2DP_DECODER_INTERFACE* A2DP_GetDecoderInterfaceSbc(
+    const uint8_t* p_codec_info);
 
 #ifdef __cplusplus
 }

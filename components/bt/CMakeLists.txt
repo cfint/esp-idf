@@ -271,6 +271,7 @@ if(CONFIG_BT_ENABLED)
                    "host/bluedroid/main/bte_main.c"
                    "host/bluedroid/stack/a2dp/a2d_api.c"
                    "host/bluedroid/stack/a2dp/a2d_sbc.c"
+                   "host/bluedroid/stack/a2dp/a2d_sbc_decoder.c"
                    "host/bluedroid/stack/a2dp/a2dp_codec_config.c"
                    "host/bluedroid/stack/avct/avct_api.c"
                    "host/bluedroid/stack/avct/avct_ccb.c"

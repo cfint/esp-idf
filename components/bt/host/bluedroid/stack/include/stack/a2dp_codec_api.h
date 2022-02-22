@@ -11,6 +11,7 @@
 #ifndef A2DP_CODEC_API_H
 #define A2DP_CODEC_API_H
 
+#include "bt_av.h"
 #include "stack/a2d_api.h"
 
 // Prototype for a callback to receive decoded audio data from a

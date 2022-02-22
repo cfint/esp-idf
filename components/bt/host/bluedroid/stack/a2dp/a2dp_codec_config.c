@@ -93,6 +93,15 @@ const tA2DP_DECODER_INTERFACE* A2DP_GetDecoderInterface(
     const uint8_t* p_codec_info) {
   tA2D_CODEC_TYPE codec_type = A2DP_GetCodecType(p_codec_info);
 
+  switch (codec_type) {
+#if (defined(SBC_DEC_INCLUDED) && SBC_DEC_INCLUDED == TRUE)
+    case A2D_MEDIA_CT_SBC:
+      return A2DP_GetDecoderInterfaceSbc(p_codec_info);
+#endif /* #if (defined(SBC_DEC_INCLUDED) && SBC_DEC_INCLUDED == TRUE) */
+    default:
+      break;
+  }
+
   LOG_ERROR("%s: unsupported codec type 0x%x", __func__, codec_type);
   return NULL;
 }
