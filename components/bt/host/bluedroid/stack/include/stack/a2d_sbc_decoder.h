@@ -12,27 +12,12 @@
 #define A2DP_SBC_DECODER_H
 
 #include "a2dp_codec_api.h"
+#include "a2dp_decoder.h"
 #include "stack/bt_types.h"
 
 /*****************************************************************************
 **  Type Definitions
 *****************************************************************************/
-struct __attribute__ ((packed)) media_packet_header {
-    uint8_t cc:4;
-    uint8_t x:1;
-    uint8_t p:1;
-    uint8_t v:2;
-
-    uint8_t pt:7;
-    uint8_t marker:1;
-
-    uint16_t seq;
-    uint32_t timestamp;
-
-    uint32_t ssrc;
-    uint32_t csrc[0];
-};
-
 struct __attribute__ ((packed)) sbc_header {
     uint8_t num_frames:4;
     uint8_t rfa:1;
