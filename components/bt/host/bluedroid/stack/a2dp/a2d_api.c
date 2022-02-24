@@ -365,17 +365,12 @@ UINT8 A2D_SetTraceLevel (UINT8 new_level)
 **                  A2D_SET_ZERO_BIT, if all bits clear
 **                  A2D_SET_MULTL_BIT, if multiple bits are set
 ******************************************************************************/
-UINT8 A2D_BitsSet(UINT8 num)
+uint8_t A2D_BitsSet(uint64_t num)
 {
-    UINT8 count;
-    UINT8 res;
     if (num == 0) {
-        res = A2D_SET_ZERO_BIT;
-    } else {
-        count = (num & (num - 1));
-        res = ((count == 0) ? A2D_SET_ONE_BIT : A2D_SET_MULTL_BIT);
+        return A2D_SET_ZERO_BIT;
     }
-    return res;
+    return ((num & (num - 1)) == 0) ? A2D_SET_ONE_BIT : A2D_SET_MULTL_BIT;
 }
 
 /*******************************************************************************

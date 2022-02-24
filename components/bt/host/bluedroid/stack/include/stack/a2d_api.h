@@ -240,7 +240,7 @@ extern UINT8 A2D_SetTraceLevel (UINT8 new_level);
 **                  A2D_SET_ZERO_BIT, if all bits clear
 **                  A2D_SET_MULTL_BIT, if multiple bits are set
 ******************************************************************************/
-extern UINT8 A2D_BitsSet(UINT8 num);
+extern uint8_t A2D_BitsSet(uint64_t num);
 
 /*******************************************************************************
 **
