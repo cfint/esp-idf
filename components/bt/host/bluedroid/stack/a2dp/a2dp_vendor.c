@@ -27,6 +27,7 @@
 #include "stack/a2dp_vendor_aptx.h"
 #include "stack/a2dp_vendor_aptx_hd.h"
 #include "stack/a2dp_vendor_aptx_ll.h"
+#include "stack/a2dp_vendor_ldac.h"
 
 tA2D_STATUS A2DP_VendorParseInfo(uint8_t* p_ie, const uint8_t* p_codec_info,
                                  bool is_capability) {
@@ -50,6 +51,14 @@ tA2D_STATUS A2DP_VendorParseInfo(uint8_t* p_ie, const uint8_t* p_codec_info,
     return A2DP_ParseInfoAptxLl((tA2DP_APTX_LL_CIE*)p_ie, p_codec_info, is_capability);
   }
 #endif /* defined(APTX_DEC_INCLUDED) && APTX_DEC_INCLUDED == TRUE) */
+
+#if (defined(LDAC_DEC_INCLUDED) && LDAC_DEC_INCLUDED == TRUE)
+  // Check for LDAC
+  if (vendor_id == A2DP_LDAC_VENDOR_ID &&
+      codec_id == A2DP_LDAC_CODEC_ID) {
+    return A2DP_ParseInfoLdac((tA2DP_LDAC_CIE*)p_ie, p_codec_info, is_capability);
+  }
+#endif /* defined(LDAC_DEC_INCLUDED) && LDAC_DEC_INCLUDED == TRUE) */
 
   // Add checks based on <vendor_id, codec_id>
   (void)vendor_id;
@@ -79,6 +88,14 @@ bool A2DP_IsVendorPeerSinkCodecValid(const uint8_t* p_codec_info) {
     return A2DP_IsVendorPeerSinkCodecValidAptxLl(p_codec_info);
   }
 #endif /* defined(APTX_DEC_INCLUDED) && APTX_DEC_INCLUDED == TRUE) */
+
+#if (defined(LDAC_DEC_INCLUDED) && LDAC_DEC_INCLUDED == TRUE)
+  // Check for LDAC
+  if (vendor_id == A2DP_LDAC_VENDOR_ID &&
+      codec_id == A2DP_LDAC_CODEC_ID) {
+    return A2DP_IsVendorPeerSinkCodecValidLdac(p_codec_info);
+  }
+#endif /* defined(LDAC_DEC_INCLUDED) && LDAC_DEC_INCLUDED == TRUE) */
 
   // Add checks based on <vendor_id, codec_id>
   (void)vendor_id;
@@ -121,6 +138,14 @@ tA2D_STATUS A2DP_IsVendorPeerSourceCodecSupported(const uint8_t* p_codec_info) {
     return A2DP_IsVendorPeerSourceCodecValidAptxLl(p_codec_info);
   }
 #endif /* defined(APTX_DEC_INCLUDED) && APTX_DEC_INCLUDED == TRUE) */
+
+#if (defined(LDAC_DEC_INCLUDED) && LDAC_DEC_INCLUDED == TRUE)
+  // Check for LDAC
+  if (vendor_id == A2DP_LDAC_VENDOR_ID &&
+      codec_id == A2DP_LDAC_CODEC_ID) {
+    return A2DP_IsVendorPeerSourceCodecValidLdac(p_codec_info);
+  }
+#endif /* defined(LDAC_DEC_INCLUDED) && LDAC_DEC_INCLUDED == TRUE) */
 
   // Add checks based on <vendor_id, codec_id> and peer codec capabilities
   // NOTE: Should be done only for local Sink codecs.
@@ -172,6 +197,14 @@ btav_a2dp_codec_index_t A2DP_VendorSinkCodecIndex(
   }
 #endif /* defined(APTX_DEC_INCLUDED) && APTX_DEC_INCLUDED == TRUE) */
 
+#if (defined(LDAC_DEC_INCLUDED) && LDAC_DEC_INCLUDED == TRUE)
+  // Check for LDAC
+  if (vendor_id == A2DP_LDAC_VENDOR_ID &&
+      codec_id == A2DP_LDAC_CODEC_ID) {
+    return A2DP_VendorSinkCodecIndexLdac(p_codec_info);
+  }
+#endif /* defined(LDAC_DEC_INCLUDED) && LDAC_DEC_INCLUDED == TRUE) */
+
   // Add checks based on <vendor_id, codec_id>
   (void)vendor_id;
   (void)codec_id;
@@ -202,6 +235,14 @@ btav_a2dp_codec_index_t A2DP_VendorSourceCodecIndex(
   }
 #endif /* defined(APTX_DEC_INCLUDED) && APTX_DEC_INCLUDED == TRUE) */
 
+#if (defined(LDAC_DEC_INCLUDED) && LDAC_DEC_INCLUDED == TRUE)
+  // Check for LDAC
+  if (vendor_id == A2DP_LDAC_VENDOR_ID &&
+      codec_id == A2DP_LDAC_CODEC_ID) {
+    return A2DP_VendorSourceCodecIndexLdac(p_codec_info);
+  }
+#endif /* defined(LDAC_DEC_INCLUDED) && LDAC_DEC_INCLUDED == TRUE) */
+
   // Add checks based on <vendor_id, codec_id>
   (void)vendor_id;
   (void)codec_id;
@@ -225,6 +266,13 @@ bool A2DP_VendorInitCodecConfig(btav_a2dp_codec_index_t codec_index, UINT8 *p_re
     return true;
   }
 #endif /* defined(APTX_DEC_INCLUDED) && APTX_DEC_INCLUDED == TRUE) */
+
+#if (defined(LDAC_DEC_INCLUDED) && LDAC_DEC_INCLUDED == TRUE)
+  // Check for LDAC
+  if (A2DP_VendorInitCodecConfigLdac(codec_index, p_result)) {
+    return true;
+  }
+#endif /* defined(LDAC_DEC_INCLUDED) && LDAC_DEC_INCLUDED == TRUE) */
 
   (void)codec_index;
   (void)p_result;
@@ -255,6 +303,14 @@ bool A2DP_VendorBuildCodecConfig(UINT8 *p_src_cap, UINT8 *p_result) {
   }
 #endif /* defined(APTX_DEC_INCLUDED) && APTX_DEC_INCLUDED == TRUE) */
 
+#if (defined(LDAC_DEC_INCLUDED) && LDAC_DEC_INCLUDED == TRUE)
+  // Check for LDAC
+  if (vendor_id == A2DP_LDAC_VENDOR_ID &&
+      codec_id == A2DP_LDAC_CODEC_ID) {
+    return A2DP_VendorBuildCodecConfigLdac(p_src_cap, p_result);
+  }
+#endif /* defined(LDAC_DEC_INCLUDED) && LDAC_DEC_INCLUDED == TRUE) */
+
   // Add checks based on <vendor_id, codec_id>
   (void)vendor_id;
   (void)codec_id;
@@ -283,6 +339,14 @@ const char* A2DP_VendorCodecName(const uint8_t* p_codec_info) {
     return A2DP_VendorCodecNameAptxLl(p_codec_info);
   }
 #endif /* defined(APTX_DEC_INCLUDED) && APTX_DEC_INCLUDED == TRUE) */
+
+#if (defined(LDAC_DEC_INCLUDED) && LDAC_DEC_INCLUDED == TRUE)
+  // Check for LDAC
+  if (vendor_id == A2DP_LDAC_VENDOR_ID &&
+      codec_id == A2DP_LDAC_CODEC_ID) {
+    return A2DP_VendorCodecNameLdac(p_codec_info);
+  }
+#endif /* defined(LDAC_DEC_INCLUDED) && LDAC_DEC_INCLUDED == TRUE) */
 
   // Add checks based on <vendor_id, codec_id>
   (void)vendor_id;
@@ -326,6 +390,14 @@ bool A2DP_VendorCodecTypeEquals(const uint8_t* p_codec_info_a,
   }
 #endif /* defined(APTX_DEC_INCLUDED) && APTX_DEC_INCLUDED == TRUE) */
 
+#if (defined(LDAC_DEC_INCLUDED) && LDAC_DEC_INCLUDED == TRUE)
+  // Check for LDAC
+  if (vendor_id_a == A2DP_LDAC_VENDOR_ID &&
+      codec_id_a == A2DP_LDAC_CODEC_ID) {
+    return A2DP_VendorCodecTypeEqualsLdac(p_codec_info_a, p_codec_info_b);
+  }
+#endif /* defined(LDAC_DEC_INCLUDED) && LDAC_DEC_INCLUDED == TRUE) */
+
   // OPTIONAL: Add extra vendor-specific checks based on the
   // vendor-specific data stored in "p_codec_info_a" and "p_codec_info_b".
   (void)vendor_id_a;
@@ -355,6 +427,14 @@ const tA2DP_DECODER_INTERFACE* A2DP_GetVendorDecoderInterface(
     return A2DP_GetVendorDecoderInterfaceAptxLl(p_codec_info);
   }
 #endif /* defined(APTX_DEC_INCLUDED) && APTX_DEC_INCLUDED == TRUE) */
+
+#if (defined(LDAC_DEC_INCLUDED) && LDAC_DEC_INCLUDED == TRUE)
+  // Check for LDAC
+  if (vendor_id == A2DP_LDAC_VENDOR_ID &&
+      codec_id == A2DP_LDAC_CODEC_ID) {
+    return A2DP_GetVendorDecoderInterfaceLdac(p_codec_info);
+  }
+#endif /* defined(LDAC_DEC_INCLUDED) && LDAC_DEC_INCLUDED == TRUE) */
 
   (void)vendor_id;
   (void)codec_id;
