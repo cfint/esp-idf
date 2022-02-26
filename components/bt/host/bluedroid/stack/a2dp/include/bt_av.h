@@ -19,6 +19,9 @@ typedef enum {
 
   // Add an entry for each source codec here.
   BTAV_A2DP_CODEC_INDEX_SOURCE_SBC = 0,
+#if (defined(APTX_DEC_INCLUDED) && APTX_DEC_INCLUDED == TRUE)
+  BTAV_A2DP_CODEC_INDEX_SOURCE_APTX,
+#endif /* APTX_DEC_INCLUDED */
 
   BTAV_A2DP_CODEC_INDEX_SOURCE_MAX,
 
@@ -26,6 +29,9 @@ typedef enum {
 
   // Add an entry for each sink codec here
   BTAV_A2DP_CODEC_INDEX_SINK_SBC = BTAV_A2DP_CODEC_INDEX_SINK_MIN,
+#if (defined(APTX_DEC_INCLUDED) && APTX_DEC_INCLUDED == TRUE)
+  BTAV_A2DP_CODEC_INDEX_SINK_APTX,
+#endif /* APTX_DEC_INCLUDED */
 
   BTAV_A2DP_CODEC_INDEX_SINK_MAX,
 
