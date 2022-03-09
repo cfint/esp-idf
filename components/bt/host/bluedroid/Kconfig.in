@@ -68,6 +68,13 @@ config BT_A2DP_APTX_DECODER
     help
         A2DP aptX decoder
 
+config BT_A2DP_LDAC_DECODER
+    bool "LDAC decoder"
+    depends on BT_A2DP_ENABLE
+    default n
+    help
+        A2DP LDAC decoder
+
 config BT_SPP_ENABLED
     bool "SPP"
     depends on BT_CLASSIC_ENABLED

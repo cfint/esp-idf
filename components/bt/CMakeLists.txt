@@ -748,6 +748,19 @@ if(CONFIG_BT_A2DP_APTX_DECODER)
                      "host/bluedroid/stack/a2dp/a2dp_vendor_aptx_decoder.c")
 endif()
 
+if(CONFIG_BT_A2DP_LDAC_DECODER)
+    list(APPEND priv_include_dirs host/bluedroid/external/libldacdec)
+    list(APPEND ldac_dec_srcs "host/bluedroid/external/libldacdec/bit_allocation.c"
+               "host/bluedroid/external/libldacdec/bit_reader.c"
+               "host/bluedroid/external/libldacdec/huffCodes.c"
+               "host/bluedroid/external/libldacdec/imdct.c"
+               "host/bluedroid/external/libldacdec/libldacdec.c"
+               "host/bluedroid/external/libldacdec/spectrum.c"
+               "host/bluedroid/external/libldacdec/utility.c")
+    list(APPEND srcs ${ldac_dec_srcs})
+
+endif()
+
 idf_component_register(SRCS "${srcs}"
                        INCLUDE_DIRS "${include_dirs}"
                        PRIV_INCLUDE_DIRS "${priv_include_dirs}"
