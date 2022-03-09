@@ -174,4 +174,15 @@ bool A2DP_VendorCodecTypeEquals(const uint8_t* p_codec_info_a,
   return true;
 }
 
+const tA2DP_DECODER_INTERFACE* A2DP_GetVendorDecoderInterface(
+    const uint8_t* p_codec_info) {
+  uint32_t vendor_id = A2DP_VendorCodecGetVendorId(p_codec_info);
+  uint16_t codec_id = A2DP_VendorCodecGetCodecId(p_codec_info);
+
+  (void)vendor_id;
+  (void)codec_id;
+
+  return NULL;
+}
+
 #endif  ///A2D_INCLUDED

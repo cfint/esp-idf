@@ -107,6 +107,8 @@ const tA2DP_DECODER_INTERFACE* A2DP_GetDecoderInterface(
     case A2D_MEDIA_CT_SBC:
       return A2DP_GetDecoderInterfaceSbc(p_codec_info);
 #endif /* #if (defined(SBC_DEC_INCLUDED) && SBC_DEC_INCLUDED == TRUE) */
+    case A2D_MEDIA_CT_NON_A2DP:
+      return A2DP_GetVendorDecoderInterface(p_codec_info);
     default:
       break;
   }

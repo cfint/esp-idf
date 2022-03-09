@@ -234,6 +234,22 @@ const char* A2DP_VendorCodecName(const uint8_t* p_codec_info);
 bool A2DP_VendorCodecTypeEquals(const uint8_t* p_codec_info_a,
                                 const uint8_t* p_codec_info_b);
 
+/******************************************************************************
+**
+** Function         A2DP_GetVendorDecoderInterface
+**
+** Description      Gets the A2DP vendor-specific decoder interface that can be used to decode A2DP
+**                  packets.
+**
+**                      p_codec_info:  contains the codec information.
+**
+** Returns          the A2DP SBC decoder interface if the |p_codec_info| is valid and
+**                  supported, otherwise NULL.
+**
+******************************************************************************/
+const tA2DP_DECODER_INTERFACE* A2DP_GetVendorDecoderInterface(
+    const uint8_t* p_codec_info);
+
 #ifdef __cplusplus
 }
 #endif
