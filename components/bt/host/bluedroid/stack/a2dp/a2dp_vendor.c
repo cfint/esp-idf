@@ -130,6 +130,12 @@ btav_a2dp_codec_index_t A2DP_VendorSinkCodecIndex(
   }
 #endif /* defined(APTX_DEC_INCLUDED) && APTX_DEC_INCLUDED == TRUE) */
 
+  // Check for aptX-HD
+  if (vendor_id == A2DP_APTX_HD_VENDOR_ID &&
+      codec_id == A2DP_APTX_HD_CODEC_ID_BLUETOOTH) {
+    return A2DP_VendorSinkCodecIndexAptxHd(p_codec_info);
+  }
+
   // Add checks based on <vendor_id, codec_id>
   (void)vendor_id;
   (void)codec_id;

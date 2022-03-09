@@ -56,7 +56,7 @@ static const tA2DP_DECODER_INTERFACE a2dp_decoder_interface_aptx = {
     a2dp_aptx_decoder_decode_packet,
     NULL,  // decoder_start
     NULL,  // decoder_suspend
-    NULL,  // decoder_configure
+    a2dp_aptx_decoder_configure,
 };
 
 tA2D_STATUS A2DP_BuildInfoAptx(uint8_t media_type,

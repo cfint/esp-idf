@@ -37,6 +37,7 @@ extern size_t aptx_decode32(struct aptx_context *ctx,
 
 typedef struct {
   struct aptx_context* decoder_context;
+  bool hd;
   decoded_data_callback_t decode_callback;
 } tA2DP_APTX_DECODER_CB;
 
@@ -49,9 +50,9 @@ bool a2dp_aptx_decoder_init(decoded_data_callback_t decode_callback) {
         APPL_TRACE_ERROR("%s decoder init failed", __func__);
         return false;
     }
-
     a2dp_aptx_decoder_cb.decoder_context = decoder_context;
     a2dp_aptx_decoder_cb.decode_callback = decode_callback;
+    a2dp_aptx_decoder_cb.hd = false;
     return true;
 }
 
@@ -78,7 +79,12 @@ bool a2dp_aptx_decoder_reset(void) {
 }
 
 ssize_t a2dp_aptx_decoder_decode_packet_header(BT_HDR* p_buf) {
-    UNUSED(p_buf);
+    if (!a2dp_aptx_decoder_cb.hd) {
+        return 0;
+    }
+    size_t header_len = sizeof(struct media_packet_header);
+    p_buf->offset += header_len;
+    p_buf->len -= header_len;
     return 0;
 }
 
@@ -106,6 +112,30 @@ bool a2dp_aptx_decoder_decode_packet(BT_HDR* p_buf, unsigned char* buf, size_t b
     size_t len = buf_len - avail;
     a2dp_aptx_decoder_cb.decode_callback((uint8_t*)buf, len);
     return true;
+}
+
+void a2dp_aptx_decoder_configure(const uint8_t* p_codec_info) {
+    struct aptx_context* decoder_context = a2dp_aptx_decoder_cb.decoder_context;
+    btav_a2dp_codec_index_t index = A2DP_SinkCodecIndex(p_codec_info);
+    bool reinit = false;
+
+    if (!decoder_context) {
+        LOG_ERROR("%s: decoder not initialized", __func__);
+        return;
+    }
+
+    if (index == BTAV_A2DP_CODEC_INDEX_SINK_APTX_HD) {
+        reinit = (a2dp_aptx_decoder_cb.hd != true);
+        a2dp_aptx_decoder_cb.hd = true;
+    } else {
+        reinit = (a2dp_aptx_decoder_cb.hd != false);
+        a2dp_aptx_decoder_cb.hd = false;
+    }
+
+    if (reinit) {
+        aptx_finish(decoder_context);
+        a2dp_aptx_decoder_cb.decoder_context = aptx_init(a2dp_aptx_decoder_cb.hd);
+    }
 }
 
 #endif /* defined(APTX_DEC_INCLUDED) && APTX_DEC_INCLUDED == TRUE) */

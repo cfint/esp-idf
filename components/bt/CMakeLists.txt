@@ -743,6 +743,7 @@ if(CONFIG_BT_A2DP_APTX_DECODER)
     list(APPEND srcs ${aptx_dec_srcs})
 
     list(APPEND srcs "host/bluedroid/stack/a2dp/a2dp_vendor_aptx.c"
+                     "host/bluedroid/stack/a2dp/a2dp_vendor_aptx_hd.c"
                      "host/bluedroid/stack/a2dp/a2dp_vendor_aptx_decoder.c")
 endif()
 

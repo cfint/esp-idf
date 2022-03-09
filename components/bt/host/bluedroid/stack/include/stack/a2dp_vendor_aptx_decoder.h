@@ -10,6 +10,7 @@
 #define A2DP_VENDOR_APTX_DECODER_H
 
 #include "a2dp_codec_api.h"
+#include "a2dp_decoder.h"
 #include "stack/bt_types.h"
 
 /*****************************************************************************
@@ -75,6 +76,19 @@ ssize_t a2dp_aptx_decoder_decode_packet_header(BT_HDR* p_data);
 **
 ******************************************************************************/
 bool a2dp_aptx_decoder_decode_packet(BT_HDR* p_buf, unsigned char* buf, size_t buf_len);
+
+
+/******************************************************************************
+**
+** Function         a2dp_aptx_decoder_configure
+**
+** Description      Configure the aptX decoder.
+**
+**                      p_codec_info:  Codec capabilities
+**
+******************************************************************************/
+void a2dp_aptx_decoder_configure(const uint8_t* p_codec_info);
+
 
 #ifdef __cplusplus
 }

@@ -9,6 +9,7 @@
 #include "stack/a2d_sbc.h"
 #include "stack/a2dp_codec_api.h"
 #include "stack/a2dp_vendor.h"
+#include "stack/a2dp_vendor_aptx_hd.h"
 #include "bta/bta_av_api.h"
 #include "bta/bta_av_ci.h"
 #include "bta/bta_av_co.h"
