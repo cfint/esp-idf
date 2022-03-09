@@ -742,7 +742,8 @@ if(CONFIG_BT_A2DP_APTX_DECODER)
     list(APPEND aptx_dec_srcs "host/bluedroid/external/libfreeaptx/freeaptx.c")
     list(APPEND srcs ${aptx_dec_srcs})
 
-    list(APPEND srcs "host/bluedroid/stack/a2dp/a2dp_vendor_aptx.c")
+    list(APPEND srcs "host/bluedroid/stack/a2dp/a2dp_vendor_aptx.c"
+                     "host/bluedroid/stack/a2dp/a2dp_vendor_aptx_decoder.c")
 endif()
 
 idf_component_register(SRCS "${srcs}"

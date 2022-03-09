@@ -11,6 +11,7 @@
 #include "stack/a2d_api.h"
 #include "stack/a2d_sbc.h"
 #include "stack/a2dp_vendor_aptx.h"
+#include "stack/a2dp_vendor_aptx_decoder.h"
 
 #if (defined(APTX_DEC_INCLUDED) && APTX_DEC_INCLUDED == TRUE)
 
@@ -45,6 +46,17 @@ static const tA2DP_APTX_CIE a2dp_aptx_default_config = {
     A2DP_APTX_FUTURE_1,                /* future1 */
     A2DP_APTX_FUTURE_2,                /* future2 */
     BTAV_A2DP_CODEC_BITS_PER_SAMPLE_16 /* bits_per_sample */
+};
+
+static const tA2DP_DECODER_INTERFACE a2dp_decoder_interface_aptx = {
+    a2dp_aptx_decoder_init,
+    a2dp_aptx_decoder_cleanup,
+    a2dp_aptx_decoder_reset,
+    a2dp_aptx_decoder_decode_packet_header,
+    a2dp_aptx_decoder_decode_packet,
+    NULL,  // decoder_start
+    NULL,  // decoder_suspend
+    NULL,  // decoder_configure
 };
 
 tA2D_STATUS A2DP_BuildInfoAptx(uint8_t media_type,
@@ -263,6 +275,13 @@ bool A2DP_VendorBuildCodecConfigAptx(UINT8 *p_src_cap, UINT8 *p_result) {
 
   A2DP_BuildInfoAptx(A2D_MEDIA_TYPE_AUDIO, (tA2DP_APTX_CIE *) &pref_cap, p_result);
   return true;
+}
+
+const tA2DP_DECODER_INTERFACE* A2DP_GetVendorDecoderInterfaceAptx(
+    const uint8_t* p_codec_info) {
+  if (!A2DP_IsVendorPeerSinkCodecValidAptx(p_codec_info)) return NULL;
+
+  return &a2dp_decoder_interface_aptx;
 }
 
 #endif /* defined(APTX_DEC_INCLUDED) && APTX_DEC_INCLUDED == TRUE) */

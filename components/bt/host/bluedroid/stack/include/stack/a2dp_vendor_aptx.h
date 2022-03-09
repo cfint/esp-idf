@@ -12,6 +12,7 @@
 #define A2DP_VENDOR_APTX_H
 
 #include "a2d_api.h"
+#include "a2dp_codec_api.h"
 #include "a2dp_vendor_aptx_constants.h"
 #include "avdt_api.h"
 #include "bt_av.h"
@@ -242,6 +243,22 @@ bool A2DP_VendorInitCodecConfigAptxSink(uint8_t* p_codec_info);
 **
 ******************************************************************************/
 bool A2DP_VendorBuildCodecConfigAptx(UINT8 *p_src_cap, UINT8 *p_result);
+
+/******************************************************************************
+**
+** Function         A2DP_GetVendorDecoderInterfaceAptx
+**
+** Description      Gets the A2DP aptX decoder interface that can be used to decode received A2DP
+**                  packets
+**
+**                      p_codec_info:  contains the codec information.
+**
+** Returns          the A2DP aptX decoder interface if the |p_codec_info| is valid and
+**                  supported, otherwise NULL.
+**
+******************************************************************************/
+const tA2DP_DECODER_INTERFACE* A2DP_GetVendorDecoderInterfaceAptx(
+    const uint8_t* p_codec_info);
 
 #ifdef __cplusplus
 }
