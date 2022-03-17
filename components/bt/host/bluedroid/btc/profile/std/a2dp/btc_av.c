@@ -1139,6 +1139,7 @@ static void btc_av_event_open_evt(void *p_data)
         av_state = BTC_AV_STATE_IDLE;
     }
     /* inform the application of the event */
+    memcpy(&btc_av_cb.peer_bda, p_bta_data->open.bd_addr, sizeof(bt_bdaddr_t));
     btc_report_connection_state(conn_stat, &(btc_av_cb.peer_bda), 0);
     /* change state to open/idle based on the status */
     btc_sm_change_state(btc_av_cb.sm_handle, av_state);
