@@ -385,7 +385,7 @@ static void btc_a2dp_sink_data_ready(UNUSED_ATTR void *context)
             }
             p_msg = (BT_HDR *)fixed_queue_dequeue(a2dp_sink_local_param.btc_aa_snk_cb.RxSbcQ, 0);
             if ( p_msg == NULL ) {
-                APPL_TRACE_ERROR("Insufficient data in que ");
+                APPL_TRACE_DEBUG("Insufficient data in que ");
                 break;
             }
             btc_a2dp_sink_handle_inc_media(p_msg);
