@@ -28,5 +28,5 @@ int Min(int a, int b);
 uint32_t BitReverse32(uint32_t value, int bitCount);
 int32_t SignExtend32(int32_t value, int bits);
 int16_t Clamp16(int value);
-int Round(double x);
+int Round(float x);
 

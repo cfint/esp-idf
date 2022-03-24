@@ -3,11 +3,11 @@
 typedef struct {
 	int Bits;
 	int Size;
-	double Scale;
-	double ImdctPrevious[MAX_FRAME_SAMPLES];
-	double* Window;
-	double* SinTable;
-	double* CosTable;
+	float Scale;
+	float ImdctPrevious[MAX_FRAME_SAMPLES];
+	float* Window;
+	float* SinTable;
+	float* CosTable;
 } Mdct;
 
 void InitMdct();

@@ -4,21 +4,21 @@
 #include "ldacdec.h"
 #include "utility.h"
 
-double MdctWindow[3][256];
-double ImdctWindow[3][256];
-double SinTables[9][256];
-double CosTables[9][256];
+float MdctWindow[3][256];
+float ImdctWindow[3][256];
+float SinTables[9][256];
+float CosTables[9][256];
 int ShuffleTables[9][256];
 
 static void GenerateTrigTables(int sizeBits)
 {
 	const int size = 1 << sizeBits;
-	double* sinTab = SinTables[sizeBits];
-	double* cosTab = CosTables[sizeBits];
+	float* sinTab = SinTables[sizeBits];
+	float* cosTab = CosTables[sizeBits];
 
 	for (int i = 0; i < size; i++)
 	{
-		const double value = M_PI * (4 * i + 1) / (4 * size);
+		const float value = M_PI * (4 * i + 1) / (4 * size);
 		sinTab[i] = sin(value);
 		cosTab[i] = cos(value);
 	}
@@ -38,7 +38,7 @@ static void GenerateShuffleTable(int sizeBits)
 static void GenerateMdctWindow(int frameSizePower)
 {
 	const int frameSize = 1 << frameSizePower;
-	double* mdct = MdctWindow[frameSizePower - 6];
+	float* mdct = MdctWindow[frameSizePower - 6];
 
 	for (int i = 0; i < frameSize; i++)
 	{
@@ -49,8 +49,8 @@ static void GenerateMdctWindow(int frameSizePower)
 static void GenerateImdctWindow(int frameSizePower)
 {
 	const int frameSize = 1 << frameSizePower;
-	double* imdct = ImdctWindow[frameSizePower - 6];
-	double* mdct = MdctWindow[frameSizePower - 6];
+	float* imdct = ImdctWindow[frameSizePower - 6];
+	float* mdct = MdctWindow[frameSizePower - 6];
 
 	for (int i = 0; i < frameSize; i++)
 	{
@@ -80,8 +80,8 @@ void RunImdct(Mdct* mdct, float* input, float* output)
 	const int size = 1 << mdct->Bits;
 	const int half = size / 2;
 	float dctOut[MAX_FRAME_SAMPLES] = { 0.f };
-	const double* window = ImdctWindow[mdct->Bits - 6];
-	double* previous = mdct->ImdctPrevious;
+	const float* window = ImdctWindow[mdct->Bits - 6];
+	float* previous = mdct->ImdctPrevious;
 
     Dct4(mdct, input, dctOut);
 	
@@ -99,9 +99,9 @@ static void Dct4(Mdct* mdct, float* input, float* output)
 	int MdctBits = mdct->Bits;
 	int MdctSize = 1 << MdctBits;
 	const int* shuffleTable = ShuffleTables[MdctBits];
-	const double* sinTable = SinTables[MdctBits];
-	const double* cosTable = CosTables[MdctBits];
-	double dctTemp[MAX_FRAME_SAMPLES];
+	const float* sinTable = SinTables[MdctBits];
+	const float* cosTable = CosTables[MdctBits];
+	float dctTemp[MAX_FRAME_SAMPLES];
 
 	int size = MdctSize;
 	int lastIndex = size - 1;
@@ -110,10 +110,10 @@ static void Dct4(Mdct* mdct, float* input, float* output)
 	for (int i = 0; i < halfSize; i++)
 	{
 		int i2 = i * 2;
-		double a = input[i2];
-		double b = input[lastIndex - i2];
-		double sin = sinTable[i];
-		double cos = cosTable[i];
+		float a = input[i2];
+		float b = input[lastIndex - i2];
+		float sin = sinTable[i];
+		float cos = cosTable[i];
 		dctTemp[i2] = a * cos + b * sin;
 		dctTemp[i2 + 1] = a * sin - b * cos;
 	}
@@ -135,10 +135,10 @@ static void Dct4(Mdct* mdct, float* input, float* output)
 			{
 				int frontPos = (block * blockSize + i) * 2;
 				int backPos = frontPos + blockSize;
-				double a = dctTemp[frontPos] - dctTemp[backPos];
-				double b = dctTemp[frontPos + 1] - dctTemp[backPos + 1];
-				double sin = sinTable[i];
-				double cos = cosTable[i];
+				float a = dctTemp[frontPos] - dctTemp[backPos];
+				float b = dctTemp[frontPos + 1] - dctTemp[backPos + 1];
+				float sin = sinTable[i];
+				float cos = cosTable[i];
 				dctTemp[frontPos] += dctTemp[backPos];
 				dctTemp[frontPos + 1] += dctTemp[backPos + 1];
 				dctTemp[backPos] = a * cos + b * sin;

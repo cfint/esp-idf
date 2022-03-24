@@ -162,8 +162,8 @@ static void dequantizeQuantUnit( channel_t* this, int band )
 
     for( int sb=0; sb<subBandCount; ++sb )
     {
-        const double coarse = this->quantizedSpectra[subBandIndex+sb] * stepSize;
-        const double fine = this->quantizedSpectraFine[subBandIndex+sb] * stepSizeFine;
+        const float coarse = this->quantizedSpectra[subBandIndex+sb] * stepSize;
+        const float fine = this->quantizedSpectraFine[subBandIndex+sb] * stepSizeFine;
         this->spectra[subBandIndex + sb] = coarse + fine;
     }
 }
@@ -182,7 +182,7 @@ void dequantizeSpectra( channel_t *this )
     LOG_ARRAY_LEN( this->spectra, "%e, ", ga_isp_ldac[frame->quantizationUnitCount-1] + ga_nsps_ldac[frame->quantizationUnitCount-1] ); 
 }
 
-static const double spectrumScale[32] =
+static const float spectrumScale[32] =
 {
 	3.0517578125e-5, 6.1035156250e-5, 1.2207031250e-4, 2.4414062500e-4,
 	4.8828125000e-4, 9.7656250000e-4, 1.9531250000e-3, 3.9062500000e-3,

@@ -29,7 +29,7 @@ int16_t Clamp16(int value)
 	return (int16_t)value;
 }
 
-int Round(double x)
+int Round(float x)
 {
 	x += 0.5;
 	return (int)x - (x < (int)x);

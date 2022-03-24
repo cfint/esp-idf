@@ -232,7 +232,7 @@ At9Status CreateGradient(Block* block)
 	const unsigned char* curve = GradientCurves[unitCount - 1];
 	if (valueCount <= 0)
 	{
-		double scale = (-valueCount - 1) / 31.0;
+		float scale = (-valueCount - 1) / 31.0;
 		int baseVal = block->GradientStartValue - 1;
 		for (int i = block->GradientStartUnit; i < block->GradientEndUnit; i++)
 		{
@@ -241,7 +241,7 @@ At9Status CreateGradient(Block* block)
 	}
 	else
 	{
-		double scale = (valueCount - 1) / 31.0;
+		float scale = (valueCount - 1) / 31.0;
 		int baseVal = block->GradientStartValue + 1;
 		for (int i = block->GradientStartUnit; i < block->GradientEndUnit; i++)
 		{
