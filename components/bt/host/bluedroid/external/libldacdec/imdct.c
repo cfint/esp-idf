@@ -4,17 +4,81 @@
 #include "ldacdec.h"
 #include "utility.h"
 
-float MdctWindow[3][256];
-float ImdctWindow[3][256];
-float SinTables[9][256];
-float CosTables[9][256];
-int ShuffleTables[9][256];
+
+#define DEF_MDCTWINDOW(i) float* MdctWindow_##i;
+#define DEF_IMDCTWINDOW(i) float ImdctWindow_##i[1<<i];
+#define DEF_SHUFFLETABLE(i) int ShuffleTable_##i[1<<i];
+
+#define DEF_GET_WINDOW_FUNC(table, type) inline type* Get##table(int i) {	\
+	switch(i) {																\
+		case 7: return table##_7;											\
+		case 8: return table##_8;											\
+		default:															\
+			break;															\
+	}																		\
+	return NULL;															\
+}
+
+#define DEF_SINTABLE(i) float SinTable_##i[1<<i]
+#define DEF_COSTABLE(i) float CosTable_##i[1<<i]
+
+#define DEF_GET_TABLE_FUNC(table) inline float* Get##table(int i) {		\
+	switch(i) {															\
+		case 0: return table##_0;										\
+		case 1: return table##_1;										\
+		case 2: return table##_2;										\
+		case 3: return table##_3;										\
+		case 4: return table##_4;										\
+		case 5: return table##_5;										\
+		case 6: return table##_6;										\
+		case 7: return table##_7;										\
+		case 8: return table##_8;										\
+		default:														\
+			break;														\
+	}																	\
+	return NULL;														\
+}
+
+DEF_MDCTWINDOW(7);
+DEF_MDCTWINDOW(8);
+DEF_IMDCTWINDOW(7);
+DEF_IMDCTWINDOW(8);
+DEF_SHUFFLETABLE(7);
+DEF_SHUFFLETABLE(8);
+
+DEF_SINTABLE(0);
+DEF_SINTABLE(1);
+DEF_SINTABLE(2);
+DEF_SINTABLE(3);
+DEF_SINTABLE(4);
+DEF_SINTABLE(5);
+DEF_SINTABLE(6);
+DEF_SINTABLE(7);
+DEF_SINTABLE(8);
+
+DEF_COSTABLE(0);
+DEF_COSTABLE(1);
+DEF_COSTABLE(2);
+DEF_COSTABLE(3);
+DEF_COSTABLE(4);
+DEF_COSTABLE(5);
+DEF_COSTABLE(6);
+DEF_COSTABLE(7);
+DEF_COSTABLE(8);
+
+DEF_GET_WINDOW_FUNC(MdctWindow, float);
+DEF_GET_WINDOW_FUNC(ImdctWindow, float);
+DEF_GET_WINDOW_FUNC(ShuffleTable, int);
+
+DEF_GET_TABLE_FUNC(SinTable);
+DEF_GET_TABLE_FUNC(CosTable);
+
 
 static void GenerateTrigTables(int sizeBits)
 {
 	const int size = 1 << sizeBits;
-	float* sinTab = SinTables[sizeBits];
-	float* cosTab = CosTables[sizeBits];
+	float* sinTab = GetSinTable(sizeBits);
+	float* cosTab = GetCosTable(sizeBits);
 
 	for (int i = 0; i < size; i++)
 	{
@@ -27,7 +91,7 @@ static void GenerateTrigTables(int sizeBits)
 static void GenerateShuffleTable(int sizeBits)
 {
 	const int size = 1 << sizeBits;
-	int* table = ShuffleTables[sizeBits];
+	int* table = GetShuffleTable(sizeBits);
 
 	for (int i = 0; i < size; i++)
 	{
@@ -38,7 +102,7 @@ static void GenerateShuffleTable(int sizeBits)
 static void GenerateMdctWindow(int frameSizePower)
 {
 	const int frameSize = 1 << frameSizePower;
-	float* mdct = MdctWindow[frameSizePower - 6];
+	float* mdct = GetMdctWindow(frameSizePower);
 
 	for (int i = 0; i < frameSize; i++)
 	{
@@ -49,8 +113,8 @@ static void GenerateMdctWindow(int frameSizePower)
 static void GenerateImdctWindow(int frameSizePower)
 {
 	const int frameSize = 1 << frameSizePower;
-	float* imdct = ImdctWindow[frameSizePower - 6];
-	float* mdct = MdctWindow[frameSizePower - 6];
+	float* imdct = GetImdctWindow(frameSizePower);
+	float* mdct = GetMdctWindow(frameSizePower);
 
 	for (int i = 0; i < frameSize; i++)
 	{
@@ -63,13 +127,21 @@ void InitMdct()
 	for (int i = 0; i < 9; i++)
 	{
 		GenerateTrigTables(i);
-		GenerateShuffleTable(i);
 	}		
-    GenerateMdctWindow(7);
-    GenerateImdctWindow(7);
 
-    GenerateMdctWindow(8);
+	GenerateShuffleTable(7);
+	GenerateShuffleTable(8);
+
+	MdctWindow_7 = malloc(sizeof(float) * (1<<7));
+	MdctWindow_8 = malloc(sizeof(float) * (1<<8));
+	GenerateMdctWindow(7);
+	GenerateMdctWindow(8);
+
+	GenerateImdctWindow(7);
 	GenerateImdctWindow(8);
+
+	free(MdctWindow_7);
+	free(MdctWindow_8);
 }
 
 
@@ -80,7 +152,7 @@ void RunImdct(Mdct* mdct, float* input, float* output)
 	const int size = 1 << mdct->Bits;
 	const int half = size / 2;
 	float dctOut[MAX_FRAME_SAMPLES] = { 0.f };
-	const float* window = ImdctWindow[mdct->Bits - 6];
+	const float* window = GetImdctWindow(mdct->Bits);
 	float* previous = mdct->ImdctPrevious;
 
     Dct4(mdct, input, dctOut);
@@ -94,13 +166,14 @@ void RunImdct(Mdct* mdct, float* input, float* output)
     }
 }
 
+
 static void Dct4(Mdct* mdct, float* input, float* output)
 {
 	int MdctBits = mdct->Bits;
 	int MdctSize = 1 << MdctBits;
-	const int* shuffleTable = ShuffleTables[MdctBits];
-	const float* sinTable = SinTables[MdctBits];
-	const float* cosTable = CosTables[MdctBits];
+	const int* shuffleTable = GetShuffleTable(MdctBits);
+	const float* sinTable = GetSinTable(MdctBits);
+	const float* cosTable = GetCosTable(MdctBits);
 	float dctTemp[MAX_FRAME_SAMPLES];
 
 	int size = MdctSize;
@@ -126,8 +199,8 @@ static void Dct4(Mdct* mdct, float* input, float* output)
 		int blockHalfSizeBits = blockSizeBits - 1;
 		int blockSize = 1 << blockSizeBits;
 		int blockHalfSize = 1 << blockHalfSizeBits;
-		sinTable = SinTables[blockHalfSizeBits];
-		cosTable = CosTables[blockHalfSizeBits];
+		sinTable = GetSinTable(blockHalfSizeBits);
+		cosTable = GetCosTable(blockHalfSizeBits);
 
 		for (int block = 0; block < blockCount; block++)
 		{
