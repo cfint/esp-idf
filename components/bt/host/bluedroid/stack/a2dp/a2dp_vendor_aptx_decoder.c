@@ -35,9 +35,16 @@ extern size_t aptx_decode32(struct aptx_context *ctx,
                             size_t output_size,
                             size_t *written);
 
+typedef enum
+{
+    APTX_STANDARD,
+    APTX_HD,
+    APTX_LL,
+} tA2DP_APTX_TYPE;
+
 typedef struct {
   struct aptx_context* decoder_context;
-  bool hd;
+  tA2DP_APTX_TYPE aptx_type;
   decoded_data_callback_t decode_callback;
 } tA2DP_APTX_DECODER_CB;
 
@@ -52,7 +59,7 @@ bool a2dp_aptx_decoder_init(decoded_data_callback_t decode_callback) {
     }
     a2dp_aptx_decoder_cb.decoder_context = decoder_context;
     a2dp_aptx_decoder_cb.decode_callback = decode_callback;
-    a2dp_aptx_decoder_cb.hd = false;
+    a2dp_aptx_decoder_cb.aptx_type = APTX_STANDARD;
     return true;
 }
 
@@ -79,7 +86,7 @@ bool a2dp_aptx_decoder_reset(void) {
 }
 
 ssize_t a2dp_aptx_decoder_decode_packet_header(BT_HDR* p_buf) {
-    if (!a2dp_aptx_decoder_cb.hd) {
+    if (a2dp_aptx_decoder_cb.aptx_type != APTX_HD) {
         return 0;
     }
     size_t header_len = sizeof(struct media_packet_header);
@@ -98,7 +105,11 @@ bool a2dp_aptx_decoder_decode_packet(BT_HDR* p_buf, unsigned char* buf, size_t b
 
     while (src_size > 0) {
         size_t processed, written;
-        processed = aptx_decode32(decoder_context, src, src_size, dst, avail, &written);
+        if (a2dp_aptx_decoder_cb.aptx_type == APTX_LL) {
+            processed = aptx_decode32(decoder_context, src, src_size, dst, avail, &written);
+        } else {
+            processed = aptx_decode16(decoder_context, src, src_size, dst, avail, &written);
+        }
 
         src += processed;
         src_size -= processed;
@@ -117,7 +128,6 @@ bool a2dp_aptx_decoder_decode_packet(BT_HDR* p_buf, unsigned char* buf, size_t b
 void a2dp_aptx_decoder_configure(const uint8_t* p_codec_info) {
     struct aptx_context* decoder_context = a2dp_aptx_decoder_cb.decoder_context;
     btav_a2dp_codec_index_t index = A2DP_SinkCodecIndex(p_codec_info);
-    bool reinit = false;
 
     if (!decoder_context) {
         LOG_ERROR("%s: decoder not initialized", __func__);
@@ -125,17 +135,15 @@ void a2dp_aptx_decoder_configure(const uint8_t* p_codec_info) {
     }
 
     if (index == BTAV_A2DP_CODEC_INDEX_SINK_APTX_HD) {
-        reinit = (a2dp_aptx_decoder_cb.hd != true);
-        a2dp_aptx_decoder_cb.hd = true;
+        a2dp_aptx_decoder_cb.aptx_type = APTX_HD;
+    } else if (index == BTAV_A2DP_CODEC_INDEX_SINK_APTX_LL) {
+        a2dp_aptx_decoder_cb.aptx_type = APTX_LL;
     } else {
-        reinit = (a2dp_aptx_decoder_cb.hd != false);
-        a2dp_aptx_decoder_cb.hd = false;
+        a2dp_aptx_decoder_cb.aptx_type = APTX_STANDARD;
     }
 
-    if (reinit) {
-        aptx_finish(decoder_context);
-        a2dp_aptx_decoder_cb.decoder_context = aptx_init(a2dp_aptx_decoder_cb.hd);
-    }
+    aptx_finish(decoder_context);
+    a2dp_aptx_decoder_cb.decoder_context = aptx_init(a2dp_aptx_decoder_cb.aptx_type == APTX_HD);
 }
 
 #endif /* defined(APTX_DEC_INCLUDED) && APTX_DEC_INCLUDED == TRUE) */
