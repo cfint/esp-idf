@@ -418,7 +418,6 @@ static void btc_a2dp_sink_handle_decoder_reset(tBTC_MEDIA_SINK_CFG_UPDATE *p_msg
     if (a2dp_sink_local_param.decoder->decoder_configure){
         a2dp_sink_local_param.decoder->decoder_configure(p_msg->codec_info);
     }
-    btc_a2dp_control_set_datachnl_stat(TRUE);
 }
 
 /*******************************************************************************
