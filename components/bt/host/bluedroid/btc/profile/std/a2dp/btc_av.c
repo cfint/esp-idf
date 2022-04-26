@@ -931,7 +931,6 @@ static BOOLEAN btc_av_state_started_handler(btc_sm_event_t event, void *p_data)
 #endif /* BTC_AV_SRC_INCLUDED */
 #if BTC_AV_SINK_INCLUDED
         if (btc_av_cb.peer_sep == AVDT_TSEP_SRC) {
-            btc_a2dp_sink_set_rx_flush(TRUE);
             btc_a2dp_on_stopped(NULL);
         }
 #endif /* BTC_AV_SINK_INCLUDED */
