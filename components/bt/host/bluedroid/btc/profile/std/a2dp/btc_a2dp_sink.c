@@ -331,36 +331,6 @@ void btc_a2dp_sink_reset_decoder(UINT8 *p_av)
         return;
     }
 
-    const tA2DP_DECODER_INTERFACE* decoder = A2DP_GetDecoderInterface((const uint8_t*)p_av);
-    if (!decoder) {
-        APPL_TRACE_ERROR("%s: Couldn't get decoder for codec %s", __func__,
-                         A2DP_CodecName(p_av));
-        return;
-    }
-
-    if (decoder != a2dp_sink_local_param.decoder) {
-        // De-initialize previous decoder
-        if (a2dp_sink_local_param.decoder && a2dp_sink_local_param.decoder->decoder_cleanup) {
-            a2dp_sink_local_param.decoder->decoder_cleanup();
-        }
-
-        // Initialize new decoder
-        a2dp_sink_local_param.decoder = decoder;
-        if (a2dp_sink_local_param.decoder->decoder_init &&
-            !a2dp_sink_local_param.decoder->decoder_init(btc_a2d_data_cb_to_app)) {
-            APPL_TRACE_ERROR("%s: Decoder failed to initialize", __func__);
-            return;
-        }
-    } else {
-        if (a2dp_sink_local_param.decoder->decoder_reset) {
-            a2dp_sink_local_param.decoder->decoder_reset();
-        }
-    }
-
-    if (a2dp_sink_local_param.decoder->decoder_configure){
-        a2dp_sink_local_param.decoder->decoder_configure((const uint8_t*)p_av);
-    }
-
     memcpy(p_buf->codec_info, p_av, AVDT_CODEC_SIZE);
     btc_a2dp_sink_ctrl(BTC_MEDIA_AUDIO_SINK_CFG_UPDATE, p_buf);
 }
@@ -412,9 +382,32 @@ static void btc_a2dp_sink_data_ready(UNUSED_ATTR void *context)
 static void btc_a2dp_sink_handle_decoder_reset(tBTC_MEDIA_SINK_CFG_UPDATE *p_msg)
 {
     a2dp_sink_local_param.btc_aa_snk_cb.rx_flush = FALSE;
-    if (a2dp_sink_local_param.decoder->decoder_reset){
-        a2dp_sink_local_param.decoder->decoder_reset();
+    const tA2DP_DECODER_INTERFACE* decoder = A2DP_GetDecoderInterface(p_msg->codec_info);
+    if (!decoder) {
+        APPL_TRACE_ERROR("%s: Couldn't get decoder for codec %s", __func__,
+                         A2DP_CodecName(p_msg->codec_info));
+        return;
     }
+
+    if (decoder != a2dp_sink_local_param.decoder) {
+        // De-initialize previous decoder
+        if (a2dp_sink_local_param.decoder && a2dp_sink_local_param.decoder->decoder_cleanup) {
+            a2dp_sink_local_param.decoder->decoder_cleanup();
+        }
+
+        // Initialize new decoder
+        a2dp_sink_local_param.decoder = decoder;
+        if (a2dp_sink_local_param.decoder->decoder_init &&
+            !a2dp_sink_local_param.decoder->decoder_init(btc_a2d_data_cb_to_app)) {
+            APPL_TRACE_ERROR("%s: Decoder failed to initialize", __func__);
+            return;
+        }
+    } else {
+        if (a2dp_sink_local_param.decoder->decoder_reset) {
+            a2dp_sink_local_param.decoder->decoder_reset();
+        }
+    }
+
     if (a2dp_sink_local_param.decoder->decoder_configure){
         a2dp_sink_local_param.decoder->decoder_configure(p_msg->codec_info);
     }
