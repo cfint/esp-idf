@@ -381,7 +381,6 @@ static void btc_a2dp_sink_data_ready(UNUSED_ATTR void *context)
  *******************************************************************************/
 static void btc_a2dp_sink_handle_decoder_reset(tBTC_MEDIA_SINK_CFG_UPDATE *p_msg)
 {
-    a2dp_sink_local_param.btc_aa_snk_cb.rx_flush = FALSE;
     const tA2DP_DECODER_INTERFACE* decoder = A2DP_GetDecoderInterface(p_msg->codec_info);
     if (!decoder) {
         APPL_TRACE_ERROR("%s: Couldn't get decoder for codec %s", __func__,
