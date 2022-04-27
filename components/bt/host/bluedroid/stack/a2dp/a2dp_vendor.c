@@ -45,11 +45,13 @@ tA2D_STATUS A2DP_VendorParseInfo(uint8_t* p_ie, const uint8_t* p_codec_info,
       codec_id == A2DP_APTX_HD_CODEC_ID_BLUETOOTH) {
     return A2DP_ParseInfoAptxHd((tA2DP_APTX_HD_CIE*)p_ie, p_codec_info, is_capability);
   }
+  /*
   // Check for aptX-LL
   if (vendor_id == A2DP_APTX_LL_VENDOR_ID &&
       codec_id == A2DP_APTX_LL_CODEC_ID_BLUETOOTH) {
     return A2DP_ParseInfoAptxLl((tA2DP_APTX_LL_CIE*)p_ie, p_codec_info, is_capability);
   }
+  */
 #endif /* defined(APTX_DEC_INCLUDED) && APTX_DEC_INCLUDED == TRUE) */
 
 #if (defined(LDAC_DEC_INCLUDED) && LDAC_DEC_INCLUDED == TRUE)
@@ -82,11 +84,13 @@ bool A2DP_IsVendorPeerSinkCodecValid(const uint8_t* p_codec_info) {
       codec_id == A2DP_APTX_HD_CODEC_ID_BLUETOOTH) {
     return A2DP_IsVendorPeerSinkCodecValidAptxHd(p_codec_info);
   }
+  /*
   // Check for aptX-LL
   if (vendor_id == A2DP_APTX_LL_VENDOR_ID &&
       codec_id == A2DP_APTX_LL_CODEC_ID_BLUETOOTH) {
     return A2DP_IsVendorPeerSinkCodecValidAptxLl(p_codec_info);
   }
+  */
 #endif /* defined(APTX_DEC_INCLUDED) && APTX_DEC_INCLUDED == TRUE) */
 
 #if (defined(LDAC_DEC_INCLUDED) && LDAC_DEC_INCLUDED == TRUE)
@@ -132,11 +136,13 @@ bool A2DP_IsVendorPeerSourceCodecSupported(const uint8_t* p_codec_info) {
       codec_id == A2DP_APTX_HD_CODEC_ID_BLUETOOTH) {
     return A2DP_IsVendorPeerSourceCodecValidAptxHd(p_codec_info);
   }
+  /*
   // Check for aptX-LL
   if (vendor_id == A2DP_APTX_LL_VENDOR_ID &&
       codec_id == A2DP_APTX_LL_CODEC_ID_BLUETOOTH) {
     return A2DP_IsVendorPeerSourceCodecValidAptxLl(p_codec_info);
   }
+  */
 #endif /* defined(APTX_DEC_INCLUDED) && APTX_DEC_INCLUDED == TRUE) */
 
 #if (defined(LDAC_DEC_INCLUDED) && LDAC_DEC_INCLUDED == TRUE)
@@ -190,11 +196,13 @@ btav_a2dp_codec_index_t A2DP_VendorSinkCodecIndex(
       codec_id == A2DP_APTX_HD_CODEC_ID_BLUETOOTH) {
     return A2DP_VendorSinkCodecIndexAptxHd(p_codec_info);
   }
+  /*
   // Check for aptX-LL
   if (vendor_id == A2DP_APTX_LL_VENDOR_ID &&
       codec_id == A2DP_APTX_LL_CODEC_ID_BLUETOOTH) {
     return A2DP_VendorSinkCodecIndexAptxLl(p_codec_info);
   }
+  */
 #endif /* defined(APTX_DEC_INCLUDED) && APTX_DEC_INCLUDED == TRUE) */
 
 #if (defined(LDAC_DEC_INCLUDED) && LDAC_DEC_INCLUDED == TRUE)
@@ -228,11 +236,13 @@ btav_a2dp_codec_index_t A2DP_VendorSourceCodecIndex(
       codec_id == A2DP_APTX_HD_CODEC_ID_BLUETOOTH) {
     return A2DP_VendorSourceCodecIndexAptxHd(p_codec_info);
   }
+  /*
   // Check for aptX-LL
   if (vendor_id == A2DP_APTX_LL_VENDOR_ID &&
       codec_id == A2DP_APTX_LL_CODEC_ID_BLUETOOTH) {
     return A2DP_VendorSourceCodecIndexAptxLl(p_codec_info);
   }
+  */
 #endif /* defined(APTX_DEC_INCLUDED) && APTX_DEC_INCLUDED == TRUE) */
 
 #if (defined(LDAC_DEC_INCLUDED) && LDAC_DEC_INCLUDED == TRUE)
@@ -261,10 +271,12 @@ bool A2DP_VendorInitCodecConfig(btav_a2dp_codec_index_t codec_index, UINT8 *p_re
   if (A2DP_VendorInitCodecConfigAptxHd(codec_index, p_result)) {
     return true;
   }
+  /*
   // Check for aptX-LL
   if (A2DP_VendorInitCodecConfigAptxLl(codec_index, p_result)) {
     return true;
   }
+  */
 #endif /* defined(APTX_DEC_INCLUDED) && APTX_DEC_INCLUDED == TRUE) */
 
 #if (defined(LDAC_DEC_INCLUDED) && LDAC_DEC_INCLUDED == TRUE)
@@ -296,11 +308,13 @@ bool A2DP_VendorBuildCodecConfig(UINT8 *p_src_cap, UINT8 *p_result) {
       codec_id == A2DP_APTX_HD_CODEC_ID_BLUETOOTH) {
     return A2DP_VendorBuildCodecConfigAptxHd(p_src_cap, p_result);
   }
+  /*
   // Check for aptX-LL
   if (vendor_id == A2DP_APTX_LL_VENDOR_ID &&
       codec_id == A2DP_APTX_LL_CODEC_ID_BLUETOOTH) {
     return A2DP_VendorBuildCodecConfigAptxLl(p_src_cap, p_result);
   }
+  */
 #endif /* defined(APTX_DEC_INCLUDED) && APTX_DEC_INCLUDED == TRUE) */
 
 #if (defined(LDAC_DEC_INCLUDED) && LDAC_DEC_INCLUDED == TRUE)
@@ -333,11 +347,13 @@ const char* A2DP_VendorCodecName(const uint8_t* p_codec_info) {
       codec_id == A2DP_APTX_HD_CODEC_ID_BLUETOOTH) {
     return A2DP_VendorCodecNameAptxHd(p_codec_info);
   }
+  /*
   // Check for aptX-LL
   if (vendor_id == A2DP_APTX_LL_VENDOR_ID &&
       codec_id == A2DP_APTX_LL_CODEC_ID_BLUETOOTH) {
     return A2DP_VendorCodecNameAptxLl(p_codec_info);
   }
+  */
 #endif /* defined(APTX_DEC_INCLUDED) && APTX_DEC_INCLUDED == TRUE) */
 
 #if (defined(LDAC_DEC_INCLUDED) && LDAC_DEC_INCLUDED == TRUE)
@@ -383,11 +399,13 @@ bool A2DP_VendorCodecTypeEquals(const uint8_t* p_codec_info_a,
       codec_id_a == A2DP_APTX_HD_CODEC_ID_BLUETOOTH) {
     return A2DP_VendorCodecTypeEqualsAptxHd(p_codec_info_a, p_codec_info_b);
   }
+  /*
   // Check for aptX-LL
   if (vendor_id_a == A2DP_APTX_LL_VENDOR_ID &&
       codec_id_a == A2DP_APTX_LL_CODEC_ID_BLUETOOTH) {
     return A2DP_VendorCodecTypeEqualsAptxLl(p_codec_info_a, p_codec_info_b);
   }
+  */
 #endif /* defined(APTX_DEC_INCLUDED) && APTX_DEC_INCLUDED == TRUE) */
 
 #if (defined(LDAC_DEC_INCLUDED) && LDAC_DEC_INCLUDED == TRUE)
@@ -422,10 +440,12 @@ const tA2DP_DECODER_INTERFACE* A2DP_GetVendorDecoderInterface(
       codec_id == A2DP_APTX_HD_CODEC_ID_BLUETOOTH) {
     return A2DP_GetVendorDecoderInterfaceAptxHd(p_codec_info);
   }
+  /*
   if (vendor_id == A2DP_APTX_LL_VENDOR_ID &&
       codec_id == A2DP_APTX_LL_CODEC_ID_BLUETOOTH) {
     return A2DP_GetVendorDecoderInterfaceAptxLl(p_codec_info);
   }
+  */
 #endif /* defined(APTX_DEC_INCLUDED) && APTX_DEC_INCLUDED == TRUE) */
 
 #if (defined(LDAC_DEC_INCLUDED) && LDAC_DEC_INCLUDED == TRUE)

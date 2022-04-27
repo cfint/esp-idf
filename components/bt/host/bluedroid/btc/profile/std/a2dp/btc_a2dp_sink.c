@@ -103,7 +103,7 @@ typedef struct {
     tBTC_A2DP_SINK_CB   btc_aa_snk_cb;
     osi_thread_t        *btc_aa_snk_task_hdl;
     const tA2DP_DECODER_INTERFACE* decoder;
-    unsigned char decode_buf[4096];
+    unsigned char decode_buf[8192];
 } a2dp_sink_local_param_t;
 
 static void btc_a2dp_sink_thread_init(UNUSED_ATTR void *context);
