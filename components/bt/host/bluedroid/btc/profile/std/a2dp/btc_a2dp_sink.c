@@ -35,6 +35,14 @@
 
 #if (BTC_AV_SINK_INCLUDED == TRUE)
 
+#if defined(CONFIG_BT_A2DP_SINK_BUF_SIZE)
+#define BT_A2DP_SINK_BUF_SIZE   CONFIG_BT_A2DP_SINK_BUF_SIZE
+#elif (defined(APTX_DEC_INCLUDED) && APTX_DEC_INCLUDED == TRUE)
+#define BT_A2DP_SINK_BUF_SIZE   8192
+#else
+#define BT_A2DP_SINK_BUF_SIZE   4096
+#endif
+
 /*****************************************************************************
  **  Constants
  *****************************************************************************/
@@ -98,7 +106,7 @@ typedef struct {
     tBTC_A2DP_SINK_CB   btc_aa_snk_cb;
     osi_thread_t        *btc_aa_snk_task_hdl;
     const tA2DP_DECODER_INTERFACE* decoder;
-    unsigned char decode_buf[4096];
+    unsigned char decode_buf[BT_A2DP_SINK_BUF_SIZE];
     a2dp_sink_media_pkt_seq_num_t   media_pkt_seq_num;
 } a2dp_sink_local_param_t;
 
