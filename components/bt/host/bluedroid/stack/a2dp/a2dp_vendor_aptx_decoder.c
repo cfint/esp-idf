@@ -100,15 +100,15 @@ bool a2dp_aptx_decoder_decode_packet(BT_HDR* p_buf, unsigned char* buf, size_t b
 
     unsigned char* dst = buf;
     unsigned char* src = ((unsigned char *)(p_buf + 1) + p_buf->offset);
-    uint32_t src_size = p_buf->len;
-    uint32_t avail = buf_len;
+    int32_t src_size = p_buf->len;
+    int32_t avail = buf_len;
 
-    while (src_size > 0) {
+    while (src_size > 0 && avail > 0) {
         size_t processed, written;
         if (a2dp_aptx_decoder_cb.aptx_type == APTX_LL) {
-            processed = aptx_decode32(decoder_context, src, src_size, dst, avail, &written);
+            processed = aptx_decode32(decoder_context, src, (size_t)src_size, dst, (size_t)avail, &written);
         } else {
-            processed = aptx_decode16(decoder_context, src, src_size, dst, avail, &written);
+            processed = aptx_decode16(decoder_context, src, (size_t)src_size, dst, (size_t)avail, &written);
         }
 
         src += processed;
@@ -120,7 +120,12 @@ bool a2dp_aptx_decoder_decode_packet(BT_HDR* p_buf, unsigned char* buf, size_t b
         p_buf->len -= processed;
     }
 
+    if (src_size > 0 && avail <= 0) {
+        LOG_ERROR("%s: Insufficient output buffer size. %d bytes remain.", __func__, src_size);
+    }
+
     size_t len = buf_len - avail;
+    len = len <= buf_len ? len : buf_len;
     a2dp_aptx_decoder_cb.decode_callback((uint8_t*)buf, len);
     return true;
 }
