@@ -55,10 +55,10 @@ bool a2dp_ldac_decoder_decode_packet(BT_HDR* p_buf, unsigned char* buf, size_t b
     unsigned char* src = ((unsigned char *)(p_buf + 1) + p_buf->offset);
     int src_size = p_buf->len;
     unsigned char* dst = buf;
-    uint32_t dst_size = 0;
-    int bytes_used;
+    int32_t avail = buf_len;
 
-    while (src_size > 0 && dst_size < buf_len) {
+    while (src_size > 0 && avail > 0) {
+        int bytes_used;
         int out_size;
 
         if (!find_sync_word(&src, &src_size)) {
@@ -76,10 +76,16 @@ bool a2dp_ldac_decoder_decode_packet(BT_HDR* p_buf, unsigned char* buf, size_t b
         frame_t *frame = &decoder->frame;
         out_size = frame->frameSamples * frame->channelCount * sizeof(int16_t);
         dst += out_size;
-        dst_size += out_size;
+        avail -= out_size;
     }
 
-    a2dp_ldac_decoder_cb.decode_callback((uint8_t*)buf, dst_size);
+    if (src_size > 0 && avail <= 0) {
+        LOG_ERROR("%s: Insufficient output buffer size. %d bytes remain.", __func__, src_size);
+    }
+
+    size_t len = buf_len - avail;
+    len = len <= buf_len ? len : buf_len;
+    a2dp_ldac_decoder_cb.decode_callback((uint8_t*)buf, len);
     return true;    
 }
 
