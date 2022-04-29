@@ -103,8 +103,9 @@ bool a2dp_aptx_decoder_decode_packet(BT_HDR* p_buf, unsigned char* buf, size_t b
     int32_t src_size = p_buf->len;
     int32_t avail = buf_len;
 
-    while (src_size > 0 && avail > 0) {
-        size_t processed, written;
+    size_t processed = -1;
+    while (src_size > 0 && avail > 0 && processed) {
+        size_t written;
         if (a2dp_aptx_decoder_cb.aptx_type == APTX_LL) {
             processed = aptx_decode32(decoder_context, src, (size_t)src_size, dst, (size_t)avail, &written);
         } else {
