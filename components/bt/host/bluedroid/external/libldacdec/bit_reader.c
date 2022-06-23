@@ -23,7 +23,7 @@ int32_t ReadSignedInt(BitReaderCxt* br, const int bits)
 	return SignExtend32(value, bits);
 }
 
-int ReadOffsetBinary(BitReaderCxt* br, const int bits)
+int32_t ReadOffsetBinary(BitReaderCxt* br, const int bits)
 {
 	const int offset = 1 << (bits - 1);
 	const int value = PeekInt(br, bits) - offset;
