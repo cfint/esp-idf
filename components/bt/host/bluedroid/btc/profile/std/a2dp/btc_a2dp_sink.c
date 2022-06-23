@@ -97,17 +97,17 @@ typedef struct {
     fixed_queue_t *RxSbcQ;
 } tBTC_A2DP_SINK_CB;
 
-typedef struct {
-    uint16_t expected_seq_num;
-    bool seq_num_recount;
-} a2dp_sink_media_pkt_seq_num_t;
+// typedef struct {
+//     uint16_t expected_seq_num;
+//     bool seq_num_recount;
+// } a2dp_sink_media_pkt_seq_num_t;
 
 typedef struct {
     tBTC_A2DP_SINK_CB   btc_aa_snk_cb;
     osi_thread_t        *btc_aa_snk_task_hdl;
     const tA2DP_DECODER_INTERFACE* decoder;
     unsigned char decode_buf[BT_A2DP_SINK_BUF_SIZE];
-    a2dp_sink_media_pkt_seq_num_t   media_pkt_seq_num;
+    // a2dp_sink_media_pkt_seq_num_t   media_pkt_seq_num;
 } a2dp_sink_local_param_t;
 
 static void btc_a2dp_sink_thread_init(UNUSED_ATTR void *context);
@@ -309,10 +309,10 @@ static BOOLEAN btc_a2dp_sink_clear_track(void)
 void btc_a2dp_sink_set_rx_flush(BOOLEAN enable)
 {
     APPL_TRACE_EVENT("## DROP RX %d ##\n", enable);
-    if (enable == FALSE) {
-        a2dp_sink_local_param.media_pkt_seq_num.expected_seq_num = 0x1;
-        a2dp_sink_local_param.media_pkt_seq_num.seq_num_recount = true;
-    }
+    // if (enable == FALSE) {
+    //     a2dp_sink_local_param.media_pkt_seq_num.expected_seq_num = 0x1;
+    //     a2dp_sink_local_param.media_pkt_seq_num.seq_num_recount = true;
+    // }
     a2dp_sink_local_param.btc_aa_snk_cb.rx_flush = enable;
 }
 
@@ -443,20 +443,17 @@ static void btc_a2dp_sink_handle_inc_media(BT_HDR *p_msg)
         return;
     }
 
-    if (p_msg->layer_specific != a2dp_sink_local_param.media_pkt_seq_num.expected_seq_num) {
-        /* Because the sequence number of some devices is not recounted */
-        if (!a2dp_sink_local_param.media_pkt_seq_num.seq_num_recount ||
-                a2dp_sink_local_param.media_pkt_seq_num.expected_seq_num != 0x1) {
-            APPL_TRACE_WARNING("Sequence numbers error, recv:0x%x, expect:0x%x, recount:0x%x",
-                                p_msg->layer_specific, a2dp_sink_local_param.media_pkt_seq_num.expected_seq_num,
-                                a2dp_sink_local_param.media_pkt_seq_num.seq_num_recount);
-        }
-    }
-    a2dp_sink_local_param.media_pkt_seq_num.expected_seq_num  = p_msg->layer_specific + 1;
-    a2dp_sink_local_param.media_pkt_seq_num.seq_num_recount = false;
-
-    APPL_TRACE_DEBUG("Number of sbc frames %d, frame_len %d\n", num_sbc_frames, sbc_frame_len);
-
+    // if (p_msg->layer_specific != a2dp_sink_local_param.media_pkt_seq_num.expected_seq_num) {
+    //     /* Because the sequence number of some devices is not recounted */
+    //     if (!a2dp_sink_local_param.media_pkt_seq_num.seq_num_recount ||
+    //             a2dp_sink_local_param.media_pkt_seq_num.expected_seq_num != 0x1) {
+    //         APPL_TRACE_WARNING("Sequence numbers error, recv:0x%x, expect:0x%x, recount:0x%x",
+    //                             p_msg->layer_specific, a2dp_sink_local_param.media_pkt_seq_num.expected_seq_num,
+    //                             a2dp_sink_local_param.media_pkt_seq_num.seq_num_recount);
+    //     }
+    // }
+    // a2dp_sink_local_param.media_pkt_seq_num.expected_seq_num  = p_msg->layer_specific + 1;
+    // a2dp_sink_local_param.media_pkt_seq_num.seq_num_recount = false;
 
     if (a2dp_sink_local_param.decoder->decode_packet_header) {
         ssize_t res = a2dp_sink_local_param.decoder->decode_packet_header(p_msg);
