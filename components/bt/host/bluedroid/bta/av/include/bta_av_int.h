@@ -332,7 +332,7 @@ typedef struct {
 /* type for SEP control block */
 typedef struct {
     UINT8               av_handle;         /* AVDTP handle */
-    tBTA_AV_CODEC       codec_type;        /* codec type */
+    uint8_t codec_info[AVDT_CODEC_SIZE]; /* Codec info */
     UINT8               tsep;              /* SEP type of local SEP */
     tBTA_AV_DATA_CBACK  *p_app_data_cback; /* Application callback for media packets */
 } tBTA_AV_SEP;
@@ -425,7 +425,7 @@ typedef struct {
     const tBTA_AV_ACT   *p_act_tbl;     /* the action table for stream state machine */
     const tBTA_AV_CO_FUNCTS *p_cos;     /* the associated callout functions */
     tSDP_DISCOVERY_DB   *p_disc_db;     /* pointer to discovery database */
-    tBTA_AV_SEP         seps[BTA_AV_MAX_SEPS];
+    tBTA_AV_SEP         seps[BTAV_A2DP_CODEC_INDEX_MAX];
     tAVDT_CFG           *p_cap;         /* buffer used for get capabilities */
     list_t              *a2d_list;      /* used for audio channels only */
     tBTA_AV_Q_INFO      q_info;
@@ -437,7 +437,6 @@ typedef struct {
     UINT16              stream_mtu;     /* MTU of stream */
     UINT16              avdt_version;   /* the avdt version of peer device */
     tBTA_SEC            sec_mask;       /* security mask */
-    tBTA_AV_CODEC       codec_type;     /* codec type */
     UINT8               media_type;     /* Media type */
     BOOLEAN             cong;           /* TRUE if AVDTP congested */
     tBTA_AV_STATUS      open_status;    /* open failure status */

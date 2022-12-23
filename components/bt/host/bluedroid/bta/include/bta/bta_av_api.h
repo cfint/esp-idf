@@ -26,6 +26,7 @@
 #ifndef BTA_AV_API_H
 #define BTA_AV_API_H
 
+#include "bt_av.h"
 #include "stack/avrc_api.h"
 #include "stack/avdt_api.h"
 #include "stack/a2d_api.h"
@@ -258,26 +259,22 @@ typedef UINT8 tBTA_AV_ERR;
 
 
 /* function types for call-out functions */
-typedef BOOLEAN (*tBTA_AV_CO_INIT) (UINT8 *p_codec_type, UINT8 *p_codec_info,
+typedef BOOLEAN (*tBTA_AV_CO_INIT) (btav_a2dp_codec_index_t codec_index, UINT8 *p_codec_info,
                                     UINT8 *p_num_protect, UINT8 *p_protect_info, UINT8 tsep);
 typedef void (*tBTA_AV_CO_DISC_RES) (tBTA_AV_HNDL hndl, UINT8 num_seps,
                                      UINT8 num_snk, UINT8 num_src, BD_ADDR addr, UINT16 uuid_local);
 typedef void (*tBTA_AV_CO_CFG_RES) (tBTA_AV_HNDL hndl, UINT8 num_seps,
                                      UINT8 num_snk, UINT8 num_src, BD_ADDR addr, UINT16 uuid_local);
-typedef UINT8 (*tBTA_AV_CO_GETCFG) (tBTA_AV_HNDL hndl, tBTA_AV_CODEC codec_type,
-                                    UINT8 *p_codec_info, UINT8 *p_sep_info_idx, UINT8 seid,
-                                    UINT8 *p_num_protect, UINT8 *p_protect_info);
-typedef void (*tBTA_AV_CO_SETCFG) (tBTA_AV_HNDL hndl, tBTA_AV_CODEC codec_type,
-                                   UINT8 *p_codec_info, UINT8 seid, BD_ADDR addr,
+typedef UINT8 (*tBTA_AV_CO_GETCFG) (tBTA_AV_HNDL hndl,UINT8 *p_codec_info, UINT8 *p_sep_info_idx,
+                                    UINT8 seid, UINT8 *p_num_protect, UINT8 *p_protect_info);
+typedef void (*tBTA_AV_CO_SETCFG) (tBTA_AV_HNDL hndl, UINT8 *p_codec_info, UINT8 seid, BD_ADDR addr,
                                    UINT8 num_protect, UINT8 *p_protect_info,
                                    UINT8 t_local_sep, UINT8 avdt_handle);
-typedef void (*tBTA_AV_CO_OPEN) (tBTA_AV_HNDL hndl,
-                                 tBTA_AV_CODEC codec_type, UINT8 *p_codec_info,
-                                 UINT16 mtu);
-typedef void (*tBTA_AV_CO_CLOSE) (tBTA_AV_HNDL hndl, tBTA_AV_CODEC codec_type, UINT16 mtu);
-typedef void (*tBTA_AV_CO_START) (tBTA_AV_HNDL hndl, tBTA_AV_CODEC codec_type, UINT8 *p_codec_info, BOOLEAN *p_no_rtp_hdr);
-typedef void (*tBTA_AV_CO_STOP) (tBTA_AV_HNDL hndl, tBTA_AV_CODEC codec_type);
-typedef void *(*tBTA_AV_CO_DATAPATH) (tBTA_AV_CODEC codec_type,
+typedef void (*tBTA_AV_CO_OPEN) (tBTA_AV_HNDL hndl, UINT8 *p_codec_info, UINT16 mtu);
+typedef void (*tBTA_AV_CO_CLOSE) (tBTA_AV_HNDL hndl, UINT16 mtu);
+typedef void (*tBTA_AV_CO_START) (tBTA_AV_HNDL hndl, UINT8 *p_codec_info, BOOLEAN *p_no_rtp_hdr);
+typedef void (*tBTA_AV_CO_STOP) (tBTA_AV_HNDL hndl);
+typedef void *(*tBTA_AV_CO_DATAPATH) (const uint8_t* p_codec_info,
                                       UINT32 *p_len, UINT32 *p_timestamp);
 typedef void (*tBTA_AV_CO_DELAY) (tBTA_AV_HNDL hndl, UINT16 delay);
 

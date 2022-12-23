@@ -1445,7 +1445,7 @@ static void bte_av_media_callback(tBTA_AV_EVT event, tBTA_AV_MEDIA *p_data)
         btc_a2dp_sink_reset_decoder(p_data->codec_info);
 
 
-        if (A2DP_IsPeerSourceCodecSupported(p_data->codec_info)) {
+        if (A2DP_IsPeerSourceCodecSupported(p_data->codec_info) == A2D_SUCCESS) {
             btc_msg_t msg;
             btc_av_args_t arg;
 

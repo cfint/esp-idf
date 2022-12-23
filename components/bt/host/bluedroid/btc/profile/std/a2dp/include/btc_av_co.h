@@ -35,7 +35,6 @@ enum {
 typedef struct {
     UINT8 sep_info_idx;                 /* local SEP index (in BTA tables) */
     UINT8 seid;                         /* peer SEP index (in peer tables) */
-    UINT8 codec_type;                   /* peer SEP codec type */
     UINT8 codec_caps[AVDT_CODEC_SIZE];  /* peer SEP codec capabilities */
     UINT8 num_protect;                  /* peer SEP number of CP elements */
     UINT8 protect_info[BTA_AV_CP_INFO_LEN];  /* peer SEP content protection info */

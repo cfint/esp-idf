@@ -32,6 +32,7 @@
 #if defined(BTA_AV_INCLUDED) && (BTA_AV_INCLUDED == TRUE)
 #include "bta_av_int.h"
 #include "bta/utl.h"
+#include "stack/a2dp_codec_api.h"
 #include "stack/l2c_api.h"
 #include "stack/l2cdefs.h"
 #include "bta/bta_av_co.h"
@@ -533,7 +534,6 @@ static void bta_av_api_register(tBTA_AV_DATA *p_data)
     tAVDT_REG       reg;
     tAVDT_CS        cs;
     char            *p_service_name;
-    tBTA_AV_CODEC   codec_type;
     tBTA_UTL_COD    cod;
     UINT8           index = 0;
     char p_avk_service_name[BTA_SERVICE_NAME_LEN + 1];
@@ -658,9 +658,28 @@ static void bta_av_api_register(tBTA_AV_DATA *p_data)
 
             /* keep the configuration in the stream control block */
             memcpy(&p_scb->cfg, &cs.cfg, sizeof(tAVDT_CFG));
-            while (index < BTA_AV_MAX_SEPS &&
-                    (p_scb->p_cos->init)(&codec_type, cs.cfg.codec_info,
-                                         &cs.cfg.num_protect, cs.cfg.protect_info, p_data->api_reg.tsep) == TRUE) {
+
+            btav_a2dp_codec_index_t codec_index_min = BTAV_A2DP_CODEC_INDEX_MIN;
+            btav_a2dp_codec_index_t codec_index_max = BTAV_A2DP_CODEC_INDEX_MAX;
+
+            if (p_data->api_reg.tsep == AVDT_TSEP_SRC) {
+                codec_index_min = BTAV_A2DP_CODEC_INDEX_SOURCE_MIN;
+                codec_index_max = BTAV_A2DP_CODEC_INDEX_SOURCE_MAX;
+            } else if (p_data->api_reg.tsep == AVDT_TSEP_SNK) {
+                codec_index_min = BTAV_A2DP_CODEC_INDEX_SINK_MIN;
+                codec_index_max = BTAV_A2DP_CODEC_INDEX_SINK_MAX;
+            }
+
+            index = codec_index_min;
+            for (;index < codec_index_max; index++) {
+                btav_a2dp_codec_index_t codec_index = (btav_a2dp_codec_index_t) index;
+
+                if (!(p_scb->p_cos->init)(codec_index, cs.cfg.codec_info,
+                                          &cs.cfg.num_protect, cs.cfg.protect_info,
+                                          p_data->api_reg.tsep))
+                {
+                    continue;
+                }
 
 #if (BTA_AV_SINK_INCLUDED == TRUE)
                 if (p_data->api_reg.tsep == AVDT_TSEP_SNK) {
@@ -669,7 +688,9 @@ static void bta_av_api_register(tBTA_AV_DATA *p_data)
                 APPL_TRACE_DEBUG(" SEP Type = %d\n", cs.tsep);
 #endif
                 if (AVDT_CreateStream(&p_scb->seps[index].av_handle, &cs) == AVDT_SUCCESS) {
-                    p_scb->seps[index].codec_type = codec_type;
+                    /* Save a copy of the codec */
+                    memcpy(p_scb->seps[codec_index].codec_info,
+                           cs.cfg.codec_info, AVDT_CODEC_SIZE);
 
 #if (BTA_AV_SINK_INCLUDED == TRUE)
                     p_scb->seps[index].tsep = cs.tsep;
@@ -680,9 +701,9 @@ static void bta_av_api_register(tBTA_AV_DATA *p_data)
                     }
 #endif
 
-                    APPL_TRACE_DEBUG("audio[%d] av_handle: %d codec_type: %d\n",
-                                     index, p_scb->seps[index].av_handle, p_scb->seps[index].codec_type);
-                    index++;
+                    APPL_TRACE_DEBUG("audio[%d] av_handle: %d codec: %s\n",
+                                     index, p_scb->seps[index].av_handle,
+                                     A2DP_CodecName(p_scb->seps[index].codec_info));
                 } else {
                     break;
                 }
