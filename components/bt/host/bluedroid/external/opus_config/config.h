@@ -10,8 +10,14 @@
 /* Custom modes */
 /* #undef CUSTOM_MODES */
 
+/* Disable DNN debug float */
+#define DISABLE_DEBUG_FLOAT 1
+
+/* Disable dot product instructions */
+/* #undef DISABLE_DOT_PROD */
+
 /* Do not build the float API */
-//#define DISABLE_FLOAT_API 1
+#define DISABLE_FLOAT_API 1
 
 /* Disable bitstream fixes from RFC 8251 */
 /* #undef DISABLE_UPDATE_DRAFT */
@@ -19,8 +25,23 @@
 /* Assertions */
 /* #undef ENABLE_ASSERTIONS */
 
+/* Deep PLC */
+#define ENABLE_DEEP_PLC 1
+
+/* DRED */
+/* #undef ENABLE_DRED */
+
 /* Hardening */
-#define ENABLE_HARDENING 1
+/* #undef ENABLE_HARDENING */
+
+/* LOSSGEN */
+/* #undef ENABLE_LOSSGEN */
+
+/* Enable Opus Speech Coding Enhancement */
+#define ENABLE_OSCE 1
+
+/* Enable dumping of OSCE training data */
+/* #undef ENABLE_OSCE_TRAINING_DATA */
 
 /* Debug fixed-point implementation */
 /* #undef FIXED_DEBUG */
@@ -41,15 +62,15 @@
 /* #undef HAVE_ARM_NE10 */
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
-#define HAVE_DLFCN_H 1
+/* #undef HAVE_DLFCN_H */
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #define HAVE_INTTYPES_H 1
 
-/* Define to 1 if you have the `lrint' function. */
+/* Define to 1 if you have the 'lrint' function. */
 #define HAVE_LRINT 1
 
-/* Define to 1 if you have the `lrintf' function. */
+/* Define to 1 if you have the 'lrintf' function. */
 #define HAVE_LRINTF 1
 
 /* Define to 1 if you have the <stdint.h> header file. */
@@ -76,8 +97,8 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #define HAVE_UNISTD_H 1
 
-/* Define to 1 if you have the `__malloc_hook' function. */
-/* #undef HAVE___MALLOC_HOOK */
+/* Define to 1 if you have the '__malloc_hook' function. */
+#define HAVE___MALLOC_HOOK 1
 
 /* Define to the sub-directory where libtool stores uninstalled libraries. */
 #define LT_OBJDIR ".libs/"
@@ -97,6 +118,9 @@
 /* Use ARM NEON inline asm optimizations */
 /* #undef OPUS_ARM_INLINE_NEON */
 
+/* Compiler supports Aarch64 DOTPROD Intrinsics */
+/* #undef OPUS_ARM_MAY_HAVE_DOTPROD */
+
 /* Define if assembler supports EDSP instructions */
 /* #undef OPUS_ARM_MAY_HAVE_EDSP */
 
@@ -111,6 +135,9 @@
 
 /* Define if binary requires Aarch64 Neon Intrinsics */
 /* #undef OPUS_ARM_PRESUME_AARCH64_NEON_INTR */
+
+/* Define if binary requires Aarch64 dotprod Intrinsics */
+/* #undef OPUS_ARM_PRESUME_DOTPROD */
 
 /* Define if binary requires EDSP instruction support */
 /* #undef OPUS_ARM_PRESUME_EDSP */
@@ -133,8 +160,8 @@
 /* Use run-time CPU capabilities detection */
 /* #undef OPUS_HAVE_RTCD */
 
-/* Compiler supports X86 AVX Intrinsics */
-/* #undef OPUS_X86_MAY_HAVE_AVX */
+/* Compiler supports X86 AVX2 Intrinsics */
+/* #undef OPUS_X86_MAY_HAVE_AVX2 */
 
 /* Compiler supports X86 SSE Intrinsics */
 /* #undef OPUS_X86_MAY_HAVE_SSE */
@@ -145,8 +172,8 @@
 /* Compiler supports X86 SSE4.1 Intrinsics */
 /* #undef OPUS_X86_MAY_HAVE_SSE4_1 */
 
-/* Define if binary requires AVX intrinsics support */
-/* #undef OPUS_X86_PRESUME_AVX */
+/* Define if binary requires AVX2 intrinsics support */
+/* #undef OPUS_X86_PRESUME_AVX2 */
 
 /* Define if binary requires SSE intrinsics support */
 /* #undef OPUS_X86_PRESUME_SSE */
@@ -164,7 +191,7 @@
 #define PACKAGE_NAME "opus"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "opus 1.3.1-160-g8cf872a1"
+#define PACKAGE_STRING "opus 1.5.2-16-g5854a9f7"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "opus"
@@ -173,9 +200,9 @@
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "1.3.1-160-g8cf872a1"
+#define PACKAGE_VERSION "1.5.2-16-g5854a9f7"
 
-/* Define to 1 if all of the C90 standard headers exist (not just the ones
+/* Define to 1 if all of the C89 standard headers exist (not just the ones
    required in a freestanding environment). This macro is provided for
    backward compatibility; new code need not use it. */
 #define STDC_HEADERS 1
@@ -186,10 +213,10 @@
 /* Use C99 variable-size arrays */
 #define VAR_ARRAYS 1
 
-/* Define to empty if `const' does not conform to ANSI C. */
+/* Define to empty if 'const' does not conform to ANSI C. */
 /* #undef const */
 
-/* Define to `__inline__' or `__inline' if that's what the C compiler
+/* Define to '__inline__' or '__inline' if that's what the C compiler
    calls it, or to nothing if 'inline' is not supported under any name.  */
 #ifndef __cplusplus
 /* #undef inline */
@@ -208,7 +235,3 @@
 # define _Restrict
 # define __restrict__
 #endif
-
-#define OVERRIDE_OPUS_ALLOC 1
-#define OVERRIDE_OPUS_FREE 1
-#define CUSTOM_SUPPORT 1
