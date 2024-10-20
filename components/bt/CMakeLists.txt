@@ -787,6 +787,9 @@ if(CONFIG_BT_A2DP_OPUS_DECODER)
     set_source_files_properties(host/bluedroid/external/opus/silk/quant_LTP_gains.c PROPERTIES COMPILE_FLAGS -Wno-maybe-uninitialized)
     set_source_files_properties(host/bluedroid/external/opus/silk/enc_API.c PROPERTIES COMPILE_FLAGS -Wno-error=stringop-overflow)
     set_source_files_properties(host/bluedroid/external/opus/silk/enc_API.c PROPERTIES COMPILE_FLAGS -Wno-stringop-overflow)
+
+    list(APPEND srcs "host/bluedroid/stack/a2dp/a2dp_vendor_opus.c"
+                     "host/bluedroid/stack/a2dp/a2dp_vendor_opus_decoder.c")
 endif()
 
 idf_component_register(SRCS "${srcs}"
