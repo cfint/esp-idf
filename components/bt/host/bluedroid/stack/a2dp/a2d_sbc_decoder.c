@@ -61,6 +61,57 @@ void a2dp_sbc_decoder_configure(const uint8_t* p_codec_info) {
     return;
   }
 
+  uint32_t sr = 0;
+  if (cie.samp_freq == A2D_SBC_IE_SAMP_FREQ_16) {
+    sr = 16000;
+  } else if (cie.samp_freq == A2D_SBC_IE_SAMP_FREQ_32) {
+    sr = 32000;
+  } else if (cie.samp_freq == A2D_SBC_IE_SAMP_FREQ_44) {
+    sr = 44100;
+  } else if (cie.samp_freq == A2D_SBC_IE_SAMP_FREQ_48) {
+    sr = 48000;
+  }
+  LOG_INFO("%s: SBC Sampling frequency = %lu", __func__, sr);
+
+  if (cie.ch_mode == A2D_SBC_IE_CH_MD_MONO) {
+    LOG_INFO("%s: SBC Channel mode: Mono", __func__);
+  } else if (cie.ch_mode == A2D_SBC_IE_CH_MD_DUAL) {
+    LOG_INFO("%s: SBC Channel mode: Dual", __func__);
+  } else if (cie.ch_mode == A2D_SBC_IE_CH_MD_STEREO) {
+    LOG_INFO("%s: SBC Channel mode: Stereo", __func__);
+  } else if (cie.ch_mode == A2D_SBC_IE_CH_MD_JOINT) {
+    LOG_INFO("%s: SBC Channel mode: Joint", __func__);
+  }
+
+  uint8_t block_len = 0;
+  if (cie.block_len == A2D_SBC_IE_BLOCKS_4) {
+    block_len = 4;
+  } else if (cie.block_len == A2D_SBC_IE_BLOCKS_8) {
+    block_len = 8;
+  } else if (cie.block_len == A2D_SBC_IE_BLOCKS_12) {
+    block_len = 12;
+  } else if (cie.block_len == A2D_SBC_IE_BLOCKS_16) {
+    block_len = 16;
+  }
+  LOG_INFO("%s: SBC Block length = %lu", __func__, block_len);
+
+  uint8_t subbands = 0;
+  if (cie.num_subbands == A2D_SBC_IE_SUBBAND_4) {
+    subbands = 4;
+  } else if (cie.num_subbands == A2D_SBC_IE_SUBBAND_8) {
+    subbands = 8;
+  }
+  LOG_INFO("%s: SBC Number of subbands = %lu", __func__, subbands);
+
+  if (cie.alloc_mthd == A2D_SBC_IE_ALLOC_MD_S) {
+    LOG_INFO("%s: SBC Allocation method: SNR", __func__);
+  } else if (cie.alloc_mthd == A2D_SBC_IE_ALLOC_MD_L) {
+    LOG_INFO("%s: SBC Allocation method: Loudness", __func__);
+  }
+
+  LOG_INFO("%s: SBC Maximum bitpool = %lu", __func__, cie.max_bitpool);
+  LOG_INFO("%s: SBC Minimum bitpool = %lu", __func__, cie.min_bitpool);
+
   if (cie.ch_mode == A2D_SBC_IE_CH_MD_MONO) {
     a2dp_sbc_decoder_cb.maxChannels = 1;
   } else {
