@@ -68,15 +68,6 @@ config BT_A2DP_ENABLE
     help
         Advanced Audio Distrubution Profile
 
-config BT_A2DP_SINK_BUF_SIZE
-    int "Bluetooth A2DP decode buffer size (bytes)"
-    depends on BT_A2DP_ENABLE
-    default 8192 if BT_A2DP_APTX_DECODER
-    default 4096
-    range 4096 8192
-    help
-        Size of A2DP codec decode buffer in bytes.
-
 config BT_A2DP_APTX_DECODER
     bool "aptX decoder"
     depends on BT_A2DP_ENABLE
