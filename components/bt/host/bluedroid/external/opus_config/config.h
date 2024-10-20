@@ -208,3 +208,7 @@
 # define _Restrict
 # define __restrict__
 #endif
+
+#define OVERRIDE_OPUS_ALLOC 1
+#define OVERRIDE_OPUS_FREE 1
+#define CUSTOM_SUPPORT 1
