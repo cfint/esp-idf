@@ -137,15 +137,15 @@ tA2D_STATUS A2DP_ParseInfoAac(tA2DP_AAC_CIE* p_ie,
   }
 
   p_ie->objectType = *p_codec_info++;
-  LOG_ERROR("%s: sampleRate bits 0x%x 0x%x", __func__,
-            (uint16_t)*p_codec_info, ((uint16_t)*(p_codec_info + 1) << 8));
+
   p_ie->sampleRate = ((uint16_t)*p_codec_info & A2DP_AAC_SAMPLING_FREQ_MASK0) |
-                     ((uint16_t)*(p_codec_info + 1) << 8 & A2DP_AAC_SAMPLING_FREQ_MASK1);
-  LOG_ERROR("%s: sampleRate 0x%x", __func__, p_ie->sampleRate);
+                      ((uint16_t)*(p_codec_info + 1) << 8 & A2DP_AAC_SAMPLING_FREQ_MASK1);
+
   p_codec_info++;
   p_ie->channelMode = *p_codec_info & A2DP_AAC_CHANNEL_MODE_MASK;
-  p_codec_info++;
 
+
+  p_codec_info++;
   p_ie->variableBitRateSupport =
       *p_codec_info & A2DP_AAC_VARIABLE_BIT_RATE_MASK;
 

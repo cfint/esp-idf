@@ -137,6 +137,46 @@ void a2dp_aac_decoder_configure(const uint8_t* p_codec_info) {
 
   int res;
 
+  if (cie.objectType & A2DP_AAC_OBJECT_TYPE_MPEG2_LC) {
+      LOG_INFO("%s: AAC object type: MPEG-2 Low Complexity", __func__);
+  } else if (cie.objectType & A2DP_AAC_OBJECT_TYPE_MPEG4_LC) {
+      LOG_INFO("%s: AAC object type: MPEG-4 Low Complexity", __func__);
+  } else if (cie.objectType & A2DP_AAC_OBJECT_TYPE_MPEG4_LTP) {
+      LOG_INFO("%s: AAC object type: MPEG-4 Long Term Prediction", __func__);
+  } else if (cie.objectType & A2DP_AAC_OBJECT_TYPE_MPEG4_SCALABLE) {
+      LOG_INFO("%s: AAC object type: MPEG-4 Scalable", __func__);
+  }
+
+  uint32_t sr = 0;
+  if (cie.sampleRate == A2DP_AAC_SAMPLING_FREQ_8000) {
+    sr = 8000;
+  } else if (cie.sampleRate == A2DP_AAC_SAMPLING_FREQ_11025) {
+    sr = 11025;
+  } else if (cie.sampleRate == A2DP_AAC_SAMPLING_FREQ_12000) {
+    sr = 12000;
+  } else if (cie.sampleRate == A2DP_AAC_SAMPLING_FREQ_16000) {
+    sr = 16000;
+  } else if (cie.sampleRate == A2DP_AAC_SAMPLING_FREQ_22050) {
+    sr = 22050;
+  } else if (cie.sampleRate == A2DP_AAC_SAMPLING_FREQ_24000) {
+    sr = 24000;
+  } else if (cie.sampleRate == A2DP_AAC_SAMPLING_FREQ_32000) {
+    sr = 32000;
+  } else if (cie.sampleRate == A2DP_AAC_SAMPLING_FREQ_44100) {
+    sr = 44100;
+  } else if (cie.sampleRate == A2DP_AAC_SAMPLING_FREQ_48000) {
+    sr = 48000;
+  } else if (cie.sampleRate == A2DP_AAC_SAMPLING_FREQ_64000) {
+    sr = 64000;
+  } else if (cie.sampleRate == A2DP_AAC_SAMPLING_FREQ_88200) {
+    sr = 88200;
+  } else if (cie.sampleRate == A2DP_AAC_SAMPLING_FREQ_96000) {
+    sr = 96000;
+  } else {
+    LOG_ERROR("Invalid AAC sample rate config");
+  }
+  LOG_INFO("%s: AAC sample rate = %lu", __func__, sr);
+
   int channels = 2;
   switch (cie.channelMode) {
     case A2DP_AAC_CHANNEL_MODE_MONO:
@@ -149,6 +189,7 @@ void a2dp_aac_decoder_configure(const uint8_t* p_codec_info) {
       LOG_ERROR("%s: Invalid channel mode %u", __func__, cie.channelMode);
       return;
   }
+  LOG_INFO("%s: AAC channels = %u", __func__, channels);
 
   res = aacDecoder_SetParam(a2dp_aac_decoder_cb.aac_handle,
                             AAC_PCM_MIN_OUTPUT_CHANNELS, channels);
@@ -161,4 +202,10 @@ void a2dp_aac_decoder_configure(const uint8_t* p_codec_info) {
   if (res != AAC_DEC_OK) {
     LOG_ERROR("Couldn't set output channels: 0x%04X", res);
   }
+
+  bool vbr = !!(cie.variableBitRateSupport &
+                A2DP_AAC_VARIABLE_BIT_RATE_ENABLED);
+  LOG_INFO("%s: AAC vbr support = %u", __func__, vbr);
+
+  LOG_INFO("%s: AAC bitrate = %lu", __func__, cie.bitRate);
 }
