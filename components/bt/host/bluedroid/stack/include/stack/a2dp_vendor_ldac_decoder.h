@@ -59,6 +59,15 @@ ssize_t a2dp_ldac_decoder_decode_packet_header(BT_HDR* p_data);
 ******************************************************************************/
 bool a2dp_ldac_decoder_decode_packet(BT_HDR* p_buf, unsigned char* buf, size_t buf_len);
 
+/******************************************************************************
+**
+** Function         a2dp_ldac_decoder_configure
+**
+** Description      Configure the A2DP LDAC decoder.
+**
+******************************************************************************/
+void a2dp_ldac_decoder_configure(const uint8_t* p_codec_info);
+
 #ifdef __cplusplus
 }
 #endif

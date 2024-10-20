@@ -3,6 +3,7 @@
  */
 
 #include "common/bt_trace.h"
+#include "stack/a2dp_vendor_ldac.h"
 #include "stack/a2dp_vendor_ldac_constants.h"
 #include "stack/a2dp_vendor_ldac_decoder.h"
 #include "ldacdec.h"
@@ -87,6 +88,40 @@ bool a2dp_ldac_decoder_decode_packet(BT_HDR* p_buf, unsigned char* buf, size_t b
     len = len <= buf_len ? len : buf_len;
     a2dp_ldac_decoder_cb.decode_callback((uint8_t*)buf, len);
     return true;    
+}
+
+void a2dp_ldac_decoder_configure(const uint8_t* p_codec_info) {
+    tA2DP_LDAC_CIE cie;
+    tA2D_STATUS status;
+    status = A2DP_ParseInfoLdac(&cie, (uint8_t*)p_codec_info, false);
+    if (status != A2D_SUCCESS) {
+        LOG_ERROR("%s: failed parsing codec info. %d", __func__, status);
+        return;
+    }
+
+    uint32_t sr = 0;
+    if (cie.sampleRate == A2DP_LDAC_SAMPLING_FREQ_44100) {
+        sr = 44100;
+    } else if (cie.sampleRate == A2DP_LDAC_SAMPLING_FREQ_48000) {
+        sr = 48000;
+    } else if (cie.sampleRate == A2DP_LDAC_SAMPLING_FREQ_88200) {
+        sr = 88200;
+    } else if (cie.sampleRate == A2DP_LDAC_SAMPLING_FREQ_96000) {
+        sr = 96000;
+    } else if (cie.sampleRate == A2DP_LDAC_SAMPLING_FREQ_176400) {
+        sr = 176400;
+    } else if (cie.sampleRate == A2DP_LDAC_SAMPLING_FREQ_192000) {
+        sr = 192000;
+    }
+    LOG_INFO("%s: LDAC Sampling frequency = %lu", __func__, sr);
+
+    if (cie.channelMode == A2DP_LDAC_CHANNEL_MODE_MONO) {
+        LOG_INFO("%s: LDAC Channel mode: Mono", __func__);
+    } else if (cie.channelMode == A2DP_LDAC_CHANNEL_MODE_DUAL) {
+        LOG_INFO("%s: LDAC Channel mode: Dual", __func__);
+    } else if (cie.channelMode == A2DP_LDAC_CHANNEL_MODE_STEREO) {
+        LOG_INFO("%s: LDAC Channel mode: Stereo", __func__);
+    }
 }
 
 #endif /* defined(LDAC_DEC_INCLUDED) && LDAC_DEC_INCLUDED == TRUE) */
