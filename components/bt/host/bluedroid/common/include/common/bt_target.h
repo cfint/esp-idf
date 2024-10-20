@@ -1911,10 +1911,17 @@
 # else
 #  define AVDT_OPUS_SEPS	(0)
 # endif /* CONFIG_BT_A2DP_OPUS_DECODER */
+# ifdef CONFIG_BT_A2DP_LC3PLUS_DECODER
+#  define AVDT_LC3PLUS_SEPS	(1)
+# else
+#  define AVDT_LC3PLUS_SEPS	(0)
+# endif /* CONFIG_BT_A2DP_LC3PLUS_DECODER */
+
 #define AVDT_NUM_SEPS      (3 \
 							+ AVDT_APTX_SEPS \
 							+ AVDT_LDAC_SEPS \
 							+ AVDT_OPUS_SEPS \
+							+ AVDT_LC3PLUS_SEPS \
 							)
 #endif
 
