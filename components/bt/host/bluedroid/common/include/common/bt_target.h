@@ -1896,7 +1896,13 @@
 /* Number of simultaneous stream endpoints. */
 #ifndef AVDT_NUM_SEPS
 
+# ifdef CONFIG_BT_A2DP_APTX_DECODER
+#  define AVDT_APTX_SEPS	(3)
+# else
+#  define AVDT_APTX_SEPS	(0)
+# endif /* CONFIG_BT_A2DP_APTX_DECODER */
 #define AVDT_NUM_SEPS      (3 \
+							+ AVDT_APTX_SEPS \
 							)
 #endif
 
