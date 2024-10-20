@@ -763,6 +763,32 @@ if(CONFIG_BT_A2DP_LDAC_DECODER)
                      "host/bluedroid/stack/a2dp/a2dp_vendor_ldac_decoder.c")
 endif()
 
+if(CONFIG_BT_A2DP_OPUS_DECODER)
+
+    list(APPEND priv_include_dirs   "host/bluedroid/external/opus/"
+                                    "host/bluedroid/external/opus/include"
+                                    "host/bluedroid/external/opus/silk"
+                                    "host/bluedroid/external/opus/silk/fixed"
+                                    "host/bluedroid/external/opus/silk/float"
+                                    "host/bluedroid/external/opus/celt")
+
+    list(APPEND priv_include_dirs   "host/bluedroid/external/opus_config")
+
+    file(GLOB opus_srcs "host/bluedroid/external/opus/src/*.c")
+    file(GLOB opus_silk "host/bluedroid/external/opus/silk/*.c")
+    file(GLOB opus_celt "host/bluedroid/external/opus/celt/*.c")
+    file(GLOB opus_fixed "host/bluedroid/external/opus/slik/fixed/*.c")
+
+    list(APPEND srcs ${opus_srcs})
+    list(APPEND srcs ${opus_silk})
+    list(APPEND srcs ${opus_celt})
+    list(APPEND srcs ${opus_fixed})
+
+    set_source_files_properties(host/bluedroid/external/opus/silk/quant_LTP_gains.c PROPERTIES COMPILE_FLAGS -Wno-maybe-uninitialized)
+    set_source_files_properties(host/bluedroid/external/opus/silk/enc_API.c PROPERTIES COMPILE_FLAGS -Wno-error=stringop-overflow)
+    set_source_files_properties(host/bluedroid/external/opus/silk/enc_API.c PROPERTIES COMPILE_FLAGS -Wno-stringop-overflow)
+endif()
+
 idf_component_register(SRCS "${srcs}"
                        INCLUDE_DIRS "${include_dirs}"
                        PRIV_INCLUDE_DIRS "${priv_include_dirs}"
@@ -804,6 +830,10 @@ if(CONFIG_BT_ENABLED)
         PROPERTIES COMPILE_FLAGS -Wno-address-of-packed-member)
 
     target_compile_options(${COMPONENT_LIB} PRIVATE "-Wno-format")
+
+    if(CONFIG_BT_A2DP_OPUS_DECODER)
+        target_compile_definitions(${COMPONENT_TARGET} PRIVATE "-DHAVE_CONFIG_H")
+    endif()
 endif()
 
 if(CONFIG_BT_NIMBLE_MESH)
