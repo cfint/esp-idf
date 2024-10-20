@@ -37,7 +37,7 @@ typedef struct {
     esp_a2d_mct_t type;                        /*!< A2DP media codec type */
 #define ESP_A2D_CIE_LEN_SBC          (4)
 #define ESP_A2D_CIE_LEN_M12          (4)
-#define ESP_A2D_CIE_LEN_M24          (6)
+#define ESP_A2D_CIE_LEN_M24          (10)
 #define ESP_A2D_CIE_LEN_ATRAC        (7)
 #define ESP_A2D_CIE_LEN_APTX         (7)
 #define ESP_A2D_CIE_LEN_APTX_HD      (11)
