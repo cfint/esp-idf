@@ -105,6 +105,13 @@ config BT_A2DP_LDAC_DECODER
     help
         A2DP LDAC decoder
 
+config BT_A2DP_OPUS_DECODER
+    bool "Opus decoder"
+    depends on BT_A2DP_ENABLE
+    default n
+    help
+        A2DP Opus decoder
+
 config BT_SPP_ENABLED
     bool "SPP"
     depends on BT_CLASSIC_ENABLED
