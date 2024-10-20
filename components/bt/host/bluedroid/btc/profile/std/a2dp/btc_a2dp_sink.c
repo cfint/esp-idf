@@ -467,36 +467,33 @@ static void btc_a2dp_sink_data_ready(UNUSED_ATTR void *context)
     BT_HDR *p_msg;
     int nb_of_msgs_to_process = 0;
 
-    if (fixed_queue_is_empty(a2dp_sink_local_param.btc_aa_snk_cb.RxSbcQ)) {
-        APPL_TRACE_DEBUG("  QUE  EMPTY ");
-    } else {
-        if (a2dp_sink_local_param.btc_aa_snk_cb.rx_flush == TRUE) {
-            btc_a2dp_sink_flush_q(a2dp_sink_local_param.btc_aa_snk_cb.RxSbcQ);
+    if (a2dp_sink_local_param.btc_aa_snk_cb.rx_flush == TRUE) {
+        btc_a2dp_sink_flush_q(a2dp_sink_local_param.btc_aa_snk_cb.RxSbcQ);
+        return;
+    }
+
+    nb_of_msgs_to_process = fixed_queue_length(a2dp_sink_local_param.btc_aa_snk_cb.RxSbcQ);
+    APPL_TRACE_DEBUG("nb:%d", nb_of_msgs_to_process);
+    while (nb_of_msgs_to_process > 0) {
+        if (btc_a2dp_sink_state != BTC_A2DP_SINK_STATE_ON){
             return;
         }
-        nb_of_msgs_to_process = fixed_queue_length(a2dp_sink_local_param.btc_aa_snk_cb.RxSbcQ);
-        APPL_TRACE_DEBUG("nb:%d", nb_of_msgs_to_process);
-        while (nb_of_msgs_to_process > 0) {
-            if (btc_a2dp_sink_state != BTC_A2DP_SINK_STATE_ON){
-                return;
-            }
-            p_msg = (BT_HDR *)fixed_queue_dequeue(a2dp_sink_local_param.btc_aa_snk_cb.RxSbcQ, 0);
-            if ( p_msg == NULL ) {
-                APPL_TRACE_DEBUG("Insufficient data in que ");
-                break;
-            }
-            btc_a2dp_sink_handle_inc_media(p_msg);
-            osi_free(p_msg);
-            nb_of_msgs_to_process--;
+        p_msg = (BT_HDR *)fixed_queue_dequeue(a2dp_sink_local_param.btc_aa_snk_cb.RxSbcQ, 0);
+        if ( p_msg == NULL ) {
+            APPL_TRACE_DEBUG("Insufficient data in que ");
+            break;
         }
-        APPL_TRACE_DEBUG(" Process Frames - ");
+        btc_a2dp_sink_handle_inc_media(p_msg);
+        osi_free(p_msg);
+        nb_of_msgs_to_process--;
+    }
+    APPL_TRACE_DEBUG(" Process Frames - ");
 
 #if !CONFIG_BT_A2DP_DECODE_TASK
-        if (!fixed_queue_is_empty(a2dp_sink_local_param.btc_aa_snk_cb.RxSbcQ)) {
-            osi_thread_post_event(a2dp_sink_local_param.btc_aa_snk_cb.data_ready_event, OSI_THREAD_MAX_TIMEOUT);
-        }
-#endif
+    if (!fixed_queue_is_empty(a2dp_sink_local_param.btc_aa_snk_cb.RxSbcQ)) {
+        osi_thread_post_event(a2dp_sink_local_param.btc_aa_snk_cb.data_ready_event, OSI_THREAD_MAX_TIMEOUT);
     }
+#endif
 }
 
 /*******************************************************************************
