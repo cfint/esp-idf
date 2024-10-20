@@ -64,10 +64,26 @@ void a2dp_opus_decoder_configure(const uint8_t* p_codec_info) {
     for (i = 0; i < channels; ++i)
         mapping[i] = i;
 
-    APPL_TRACE_DEBUG("%s: channels = %d, streams = %d, coupled_streams = %d",
-                      __func__, channels, streams, coupled_streams);
-    APPL_TRACE_DEBUG("%s: frame_duration = 0x%x", __func__, p_ie.frame_duration);
-    APPL_TRACE_DEBUG("%s: maximum_bitrate = %u", __func__, p_ie.maximum_bitrate);
+
+
+    LOG_INFO("%s: Opus Channels = %ld", __func__, channels);
+    LOG_INFO("%s: Opus Streams = %ld", __func__, streams);
+    LOG_INFO("%s: Opus Coupled Streams = %lu", __func__, coupled_streams);
+
+    uint32_t frame_duration = 0;
+    if (p_ie.frame_duration == A2DP_OPUS_FRAME_DURATION_2_5) {
+        frame_duration = 2500;
+    } else if (p_ie.frame_duration == A2DP_OPUS_FRAME_DURATION_5_0) {
+        frame_duration = 5000;
+    } else if (p_ie.frame_duration == A2DP_OPUS_FRAME_DURATION_10) {
+        frame_duration = 10000;
+    } else if (p_ie.frame_duration == A2DP_OPUS_FRAME_DURATION_20) {
+        frame_duration = 20000;
+    } else if (p_ie.frame_duration == A2DP_OPUS_FRAME_DURATION_40) {
+        frame_duration = 40000;
+    }
+    LOG_INFO("%s: Opus Frame Duration = %lu us", __func__, frame_duration);
+    LOG_INFO("%s: Opus Maximum Bitrate = %lu", __func__, p_ie.maximum_bitrate);
 
     st = (OpusMSDecoder*) opus_multistream_decoder_create(Fs, channels, streams,
                                                           coupled_streams,
