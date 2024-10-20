@@ -29,6 +29,7 @@
 #include "stack/a2dp_vendor_aptx_ll.h"
 #include "stack/a2dp_vendor_ldac.h"
 #include "stack/a2dp_vendor_opus.h"
+#include "stack/a2dp_vendor_lc3plus.h"
 
 tA2D_STATUS A2DP_VendorParseInfo(uint8_t* p_ie, const uint8_t* p_codec_info,
                                  bool is_capability) {
@@ -68,6 +69,14 @@ tA2D_STATUS A2DP_VendorParseInfo(uint8_t* p_ie, const uint8_t* p_codec_info,
     return A2DP_ParseInfoOpus((tA2DP_OPUS_CIE*)p_ie, p_codec_info, is_capability);
   }
 #endif /* defined(OPUS_DEC_INCLUDED) && OPUS_DEC_INCLUDED == TRUE) */
+
+#if (defined(LC3PLUS_DEC_INCLUDED) && LC3PLUS_DEC_INCLUDED == TRUE)
+  // Check for Lc3Plus
+  if (vendor_id == A2DP_LC3PLUS_VENDOR_ID &&
+      codec_id == A2DP_LC3PLUS_CODEC_ID) {
+    return A2DP_ParseInfoLc3Plus((tA2DP_LC3PLUS_CIE*)p_ie, p_codec_info, is_capability);
+  }
+#endif /* defined(LC3PLUS_DEC_INCLUDED) && LC3PLUS_DEC_INCLUDED == TRUE) */
 
   // Add checks based on <vendor_id, codec_id>
   (void)vendor_id;
@@ -113,6 +122,14 @@ bool A2DP_IsVendorPeerSinkCodecValid(const uint8_t* p_codec_info) {
     return A2DP_IsVendorPeerSinkCodecValidOpus(p_codec_info);
   }
 #endif /* defined(OPUS_DEC_INCLUDED) && OPUS_DEC_INCLUDED == TRUE) */
+
+#if (defined(LC3PLUS_DEC_INCLUDED) && LC3PLUS_DEC_INCLUDED == TRUE)
+  // Check for Lc3Plus
+  if (vendor_id == A2DP_LC3PLUS_VENDOR_ID &&
+      codec_id == A2DP_LC3PLUS_CODEC_ID) {
+    return A2DP_IsVendorPeerSinkCodecValidLc3Plus(p_codec_info);
+  }
+#endif /* defined(LC3PLUS_DEC_INCLUDED) && LC3PLUS_DEC_INCLUDED == TRUE) */
 
   // Add checks based on <vendor_id, codec_id>
   (void)vendor_id;
@@ -172,6 +189,13 @@ tA2D_STATUS A2DP_IsVendorPeerSourceCodecSupported(const uint8_t* p_codec_info) {
   }
 #endif /* defined(OPUS_DEC_INCLUDED) && OPUS_DEC_INCLUDED == TRUE) */
 
+#if (defined(LC3PLUS_DEC_INCLUDED) && LC3PLUS_DEC_INCLUDED == TRUE)
+  // Check for Lc3Plus
+  if (vendor_id == A2DP_LC3PLUS_VENDOR_ID &&
+      codec_id == A2DP_LC3PLUS_CODEC_ID) {
+    return A2DP_IsVendorPeerSourceCodecValidLc3Plus(p_codec_info);
+  }
+#endif /* defined(LC3PLUS_DEC_INCLUDED) && LC3PLUS_DEC_INCLUDED == TRUE) */
 
   // Add checks based on <vendor_id, codec_id> and peer codec capabilities
   // NOTE: Should be done only for local Sink codecs.
@@ -239,6 +263,14 @@ btav_a2dp_codec_index_t A2DP_VendorSinkCodecIndex(
   }
 #endif /* defined(OPUS_DEC_INCLUDED) && OPUS_DEC_INCLUDED == TRUE) */
 
+#if (defined(LC3PLUS_DEC_INCLUDED) && LC3PLUS_DEC_INCLUDED == TRUE)
+  // Check for Lc3Plus
+  if (vendor_id == A2DP_LC3PLUS_VENDOR_ID &&
+      codec_id == A2DP_LC3PLUS_CODEC_ID) {
+    return A2DP_VendorSinkCodecIndexLc3Plus(p_codec_info);
+  }
+#endif /* defined(LC3PLUS_DEC_INCLUDED) && LC3PLUS_DEC_INCLUDED == TRUE) */
+
   // Add checks based on <vendor_id, codec_id>
   (void)vendor_id;
   (void)codec_id;
@@ -285,6 +317,13 @@ btav_a2dp_codec_index_t A2DP_VendorSourceCodecIndex(
   }
 #endif /* defined(OPUS_DEC_INCLUDED) && OPUS_DEC_INCLUDED == TRUE) */
 
+#if (defined(LC3PLUS_DEC_INCLUDED) && LC3PLUS_DEC_INCLUDED == TRUE)
+  // Check for Lc3Plus
+  if (vendor_id == A2DP_LC3PLUS_VENDOR_ID &&
+      codec_id == A2DP_LC3PLUS_CODEC_ID) {
+    return A2DP_VendorSourceCodecIndexLc3Plus(p_codec_info);
+  }
+#endif /* defined(LC3PLUS_DEC_INCLUDED) && LC3PLUS_DEC_INCLUDED == TRUE) */
 
   // Add checks based on <vendor_id, codec_id>
   (void)vendor_id;
@@ -323,6 +362,13 @@ bool A2DP_VendorInitCodecConfig(btav_a2dp_codec_index_t codec_index, UINT8 *p_re
     return true;
   }
 #endif /* defined(OPUS_DEC_INCLUDED) && OPUS_DEC_INCLUDED == TRUE) */
+
+#if (defined(LC3PLUS_DEC_INCLUDED) && LC3PLUS_DEC_INCLUDED == TRUE)
+  // Check for Lc3Plus
+  if (A2DP_VendorInitCodecConfigLc3Plus(codec_index, p_result)) {
+    return true;
+  }
+#endif /* defined(LC3PLUS_DEC_INCLUDED) && LC3PLUS_DEC_INCLUDED == TRUE) */
 
   (void)codec_index;
   (void)p_result;
@@ -369,6 +415,14 @@ bool A2DP_VendorBuildCodecConfig(UINT8 *p_src_cap, UINT8 *p_result) {
   }
 #endif /* defined(OPUS_DEC_INCLUDED) && OPUS_DEC_INCLUDED == TRUE) */
 
+#if (defined(LC3PLUS_DEC_INCLUDED) && LC3PLUS_DEC_INCLUDED == TRUE)
+  // Check for Lc3Plus
+  if (vendor_id == A2DP_LC3PLUS_VENDOR_ID &&
+      codec_id == A2DP_LC3PLUS_CODEC_ID) {
+    return A2DP_VendorBuildCodecConfigLc3Plus(p_src_cap, p_result);
+  }
+#endif /* defined(LC3PLUS_DEC_INCLUDED) && LC3PLUS_DEC_INCLUDED == TRUE) */
+
   // Add checks based on <vendor_id, codec_id>
   (void)vendor_id;
   (void)codec_id;
@@ -413,6 +467,14 @@ const char* A2DP_VendorCodecName(const uint8_t* p_codec_info) {
     return A2DP_VendorCodecNameOpus(p_codec_info);
   }
 #endif /* defined(OPUS_DEC_INCLUDED) && OPUS_DEC_INCLUDED == TRUE) */
+
+#if (defined(LC3PLUS_DEC_INCLUDED) && LC3PLUS_DEC_INCLUDED == TRUE)
+  // Check for Lc3Plus
+  if (vendor_id == A2DP_LC3PLUS_VENDOR_ID &&
+      codec_id == A2DP_LC3PLUS_CODEC_ID) {
+    return A2DP_VendorCodecNameLc3Plus(p_codec_info);
+  }
+#endif /* defined(LC3PLUS_DEC_INCLUDED) && LC3PLUS_DEC_INCLUDED == TRUE) */
 
   // Add checks based on <vendor_id, codec_id>
   (void)vendor_id;
@@ -472,6 +534,14 @@ bool A2DP_VendorCodecTypeEquals(const uint8_t* p_codec_info_a,
   }
 #endif /* defined(OPUS_DEC_INCLUDED) && OPUS_DEC_INCLUDED == TRUE) */
 
+#if (defined(LC3PLUS_DEC_INCLUDED) && LC3PLUS_DEC_INCLUDED == TRUE)
+  // Check for Lc3Plus
+  if (vendor_id_a == A2DP_LC3PLUS_VENDOR_ID &&
+      codec_id_a == A2DP_LC3PLUS_CODEC_ID) {
+    return A2DP_VendorCodecTypeEqualsLc3Plus(p_codec_info_a, p_codec_info_b);
+  }
+#endif /* defined(LC3PLUS_DEC_INCLUDED) && LC3PLUS_DEC_INCLUDED == TRUE) */
+
   // OPTIONAL: Add extra vendor-specific checks based on the
   // vendor-specific data stored in "p_codec_info_a" and "p_codec_info_b".
   (void)vendor_id_a;
@@ -517,6 +587,14 @@ const tA2DP_DECODER_INTERFACE* A2DP_GetVendorDecoderInterface(
     return A2DP_GetVendorDecoderInterfaceOpus(p_codec_info);
   }
 #endif /* defined(OPUS_DEC_INCLUDED) && OPUS_DEC_INCLUDED == TRUE) */
+
+#if (defined(LC3PLUS_DEC_INCLUDED) && LC3PLUS_DEC_INCLUDED == TRUE)
+  // Check for Lc3Plus
+  if (vendor_id == A2DP_LC3PLUS_VENDOR_ID &&
+      codec_id == A2DP_LC3PLUS_CODEC_ID) {
+    return A2DP_GetVendorDecoderInterfaceLc3Plus(p_codec_info);
+  }
+#endif /* defined(LC3PLUS_DEC_INCLUDED) && LC3PLUS_DEC_INCLUDED == TRUE) */
 
   (void)vendor_id;
   (void)codec_id;
