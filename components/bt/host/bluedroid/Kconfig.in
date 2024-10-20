@@ -105,6 +105,14 @@ config BT_A2DP_LC3PLUS_DECODER
     help
         A2DP LC3 Plus decoder
 
+config BT_A2DP_AAC_DECODER
+    bool "AAC decoder"
+    depends on BT_A2DP_ENABLE
+    default n
+    select SPIRAM
+    help
+        A2DP AAC decoder
+
 config BT_SPP_ENABLED
     bool "SPP"
     depends on BT_CLASSIC_ENABLED
