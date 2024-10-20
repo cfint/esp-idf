@@ -770,7 +770,8 @@ if(CONFIG_BT_A2DP_OPUS_DECODER)
                                     "host/bluedroid/external/opus/silk"
                                     "host/bluedroid/external/opus/silk/fixed"
                                     "host/bluedroid/external/opus/silk/float"
-                                    "host/bluedroid/external/opus/celt")
+                                    "host/bluedroid/external/opus/celt"
+                                    "host/bluedroid/external/opus/dnn")
 
     list(APPEND priv_include_dirs   "host/bluedroid/external/opus_config")
 
@@ -787,6 +788,7 @@ if(CONFIG_BT_A2DP_OPUS_DECODER)
     set_source_files_properties(host/bluedroid/external/opus/silk/quant_LTP_gains.c PROPERTIES COMPILE_FLAGS -Wno-maybe-uninitialized)
     set_source_files_properties(host/bluedroid/external/opus/silk/enc_API.c PROPERTIES COMPILE_FLAGS -Wno-error=stringop-overflow)
     set_source_files_properties(host/bluedroid/external/opus/silk/enc_API.c PROPERTIES COMPILE_FLAGS -Wno-stringop-overflow)
+    set_source_files_properties(host/bluedroid/external/opus/silk/NLSF2A.c PROPERTIES COMPILE_FLAGS -Wno-maybe-uninitialized)
 
     list(APPEND srcs "host/bluedroid/stack/a2dp/a2dp_vendor_opus.c"
                      "host/bluedroid/stack/a2dp/a2dp_vendor_opus_decoder.c")
