@@ -26,7 +26,7 @@
 /* #undef ENABLE_ASSERTIONS */
 
 /* Deep PLC */
-#define ENABLE_DEEP_PLC 1
+/* #define ENABLE_DEEP_PLC 1 */
 
 /* DRED */
 /* #undef ENABLE_DRED */
@@ -38,7 +38,7 @@
 /* #undef ENABLE_LOSSGEN */
 
 /* Enable Opus Speech Coding Enhancement */
-#define ENABLE_OSCE 1
+/* #define ENABLE_OSCE 1 */
 
 /* Enable dumping of OSCE training data */
 /* #undef ENABLE_OSCE_TRAINING_DATA */
@@ -62,7 +62,7 @@
 /* #undef HAVE_ARM_NE10 */
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
-/* #undef HAVE_DLFCN_H */
+#define HAVE_DLFCN_H 1
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #define HAVE_INTTYPES_H 1
@@ -235,3 +235,7 @@
 # define _Restrict
 # define __restrict__
 #endif
+
+#define OVERRIDE_OPUS_ALLOC 1
+#define OVERRIDE_OPUS_FREE 1
+#define CUSTOM_SUPPORT 1
