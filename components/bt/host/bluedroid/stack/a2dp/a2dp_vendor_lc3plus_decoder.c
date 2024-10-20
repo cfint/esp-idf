@@ -54,9 +54,20 @@ void a2dp_lc3plus_decoder_configure(const uint8_t* p_codec_info) {
     tA2DP_LC3PLUS_CIE p_ie;
     A2DP_ParseInfoLc3Plus(&p_ie, p_codec_info, false);
 
+    int frame_duration = 0;
     int channels = 0;
     int sample_rate = 0;
-    int frame_duration = 0;
+
+    if (p_ie.frame_duration & A2DP_LC3PLUS_FRAME_DURATION_10MS) {
+        frame_duration = 10000;
+    } else if (p_ie.frame_duration & A2DP_LC3PLUS_FRAME_DURATION_5MS) {
+        frame_duration = 5000;
+    } else if (p_ie.frame_duration & A2DP_LC3PLUS_FRAME_DURATION_2_5MS) {
+        frame_duration = 2500;
+    } else {
+        APPL_TRACE_ERROR("%s: Invalid frame_duration = 0x%x", __func__, p_ie.frame_duration);
+        return;
+    }
 
     if (p_ie.channels & A2DP_LC3PLUS_CHANNELS_2) {
         channels = 2;
@@ -76,25 +87,14 @@ void a2dp_lc3plus_decoder_configure(const uint8_t* p_codec_info) {
         return;
     }
 
-    if (p_ie.frame_duration & A2DP_LC3PLUS_FRAME_DURATION_10MS) {
-        frame_duration = 10000;
-    } else if (p_ie.frame_duration & A2DP_LC3PLUS_FRAME_DURATION_5MS) {
-        frame_duration = 5000;
-    } else if (p_ie.frame_duration & A2DP_LC3PLUS_FRAME_DURATION_2_5MS) {
-        frame_duration = 2500;
-    } else {
-        APPL_TRACE_ERROR("%s: Invalid frame_duration = 0x%x", __func__, p_ie.frame_duration);
-        return;
-    }
-
-    APPL_TRACE_ERROR("%s: frame_duration = 0x%x", __func__, p_ie.frame_duration);
-    APPL_TRACE_ERROR("%s: channels = %d", __func__, channels);
-    APPL_TRACE_ERROR("%s: sample_rate = %u", __func__, sample_rate);
+    LOG_INFO("%s: frame_duration = %ld", __func__, frame_duration);
+    LOG_INFO("%s: channels = %ld", __func__, channels);
+    LOG_INFO("%s: sample_rate = %ld", __func__, sample_rate);
 
     bool hr_mode = true;
 
-    cb->channels = channels;
     cb->frame_duration = frame_duration;
+    cb->channels = channels;
     cb->sample_rate = sample_rate;
     cb->hr_mode = hr_mode;
 
