@@ -33,6 +33,13 @@ config BT_BTU_TASK_STACK_SIZE
     help
         This select btu task stack size
 
+config BT_A2DP_DECODE_TASK
+    bool "Use separate task for A2DP decoding"
+    depends on BT_BLUEDROID_ENABLED
+    default y
+    help
+        Use separate task for A2DP decoding.
+
 config BT_BLUEDROID_MEM_DEBUG
     bool "Bluedroid memory debug"
     depends on BT_BLUEDROID_ENABLED
