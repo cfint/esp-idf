@@ -24,4 +24,12 @@ struct __attribute__ ((packed)) media_packet_header {
     uint32_t csrc[0];
 };
 
+struct __attribute__ ((packed)) media_payload_header {
+    uint8_t frame_count:4;
+    uint8_t rfa0:1;
+    uint8_t is_last_fragment:1;
+    uint8_t is_first_fragment:1;
+    uint8_t is_fragmented:1;
+};
+
 #endif // A2DP_DECODER_H
