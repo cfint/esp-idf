@@ -806,6 +806,44 @@ if(CONFIG_BT_A2DP_LC3PLUS_DECODER)
                      "host/bluedroid/stack/a2dp/a2dp_vendor_lc3plus_decoder.c")
 endif()
 
+if(CONFIG_BT_A2DP_AAC_DECODER)
+
+    list(APPEND priv_include_dirs   "host/bluedroid/external/arduino-fdk-aac/src"
+                                    "host/bluedroid/external/arduino-fdk-aac/src/libAACdec"
+                                    "host/bluedroid/external/arduino-fdk-aac/src/libFDK"
+                                    "host/bluedroid/external/arduino-fdk-aac/src/libSYS"
+                                    "host/bluedroid/external/arduino-fdk-aac/src/libArithCoding"
+                                    "host/bluedroid/external/arduino-fdk-aac/src/libMpegTPDec"
+                                    "host/bluedroid/external/arduino-fdk-aac/src/libSACdec"
+                                    "host/bluedroid/external/arduino-fdk-aac/src/libDRCdec"
+                                    "host/bluedroid/external/arduino-fdk-aac/src/libSBRdec"
+                                    "host/bluedroid/external/arduino-fdk-aac/src/libPCMutils")
+
+    file(GLOB aac0_srcs "host/bluedroid/external/arduino-fdk-aac/src/libSACdec/*.cpp")
+    file(GLOB aac1_srcs "host/bluedroid/external/arduino-fdk-aac/src/libDRCdec/*.cpp")
+    file(GLOB aac2_srcs "host/bluedroid/external/arduino-fdk-aac/src/libPCMutils/*.cpp")
+    file(GLOB aac3_srcs "host/bluedroid/external/arduino-fdk-aac/src/libSBRdec/*.cpp")
+    file(GLOB aac4_srcs "host/bluedroid/external/arduino-fdk-aac/src/libMpegTPDec/*.cpp")
+    file(GLOB aac5_srcs "host/bluedroid/external/arduino-fdk-aac/src/libArithCoding/*.cpp")
+    file(GLOB aac6_srcs "host/bluedroid/external/arduino-fdk-aac/src/libSYS/*.cpp")
+    file(GLOB aac7_srcs "host/bluedroid/external/arduino-fdk-aac/src/libFDK/*.cpp")
+    file(GLOB aac8_srcs "host/bluedroid/external/arduino-fdk-aac/src/libAACdec/*.cpp")
+    file(GLOB aac9_srcs "host/bluedroid/external/arduino-fdk-aac/src/*.cpp")
+    list(APPEND srcs ${aac0_srcs})
+    list(APPEND srcs ${aac1_srcs})
+    list(APPEND srcs ${aac2_srcs})
+    list(APPEND srcs ${aac3_srcs})
+    list(APPEND srcs ${aac4_srcs})
+    list(APPEND srcs ${aac5_srcs})
+    list(APPEND srcs ${aac6_srcs})
+    list(APPEND srcs ${aac7_srcs})
+    list(APPEND srcs ${aac8_srcs})
+    list(APPEND srcs ${aac9_srcs})
+
+    set_source_files_properties(host/bluedroid/external/arduino-fdk-aac/src/libFDK/nlc_dec.cpp PROPERTIES COMPILE_FLAGS -Wno-array-bounds)
+
+endif()
+
 idf_component_register(SRCS "${srcs}"
                        INCLUDE_DIRS "${include_dirs}"
                        PRIV_INCLUDE_DIRS "${priv_include_dirs}"
@@ -850,6 +888,9 @@ if(CONFIG_BT_ENABLED)
 
     if(CONFIG_BT_A2DP_OPUS_DECODER)
         target_compile_definitions(${COMPONENT_TARGET} PRIVATE "-DHAVE_CONFIG_H")
+    endif()
+    if(CONFIG_BT_A2DP_AAC_DECODER)
+        target_compile_definitions(${COMPONENT_TARGET} PRIVATE "-DESP32")
     endif()
 endif()
 
