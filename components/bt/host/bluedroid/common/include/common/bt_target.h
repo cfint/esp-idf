@@ -1906,9 +1906,15 @@
 # else
 #  define AVDT_LDAC_SEPS	(0)
 # endif /* CONFIG_BT_A2DP_LDAC_DECODER */
+# ifdef CONFIG_BT_A2DP_OPUS_DECODER
+#  define AVDT_OPUS_SEPS	(1)
+# else
+#  define AVDT_OPUS_SEPS	(0)
+# endif /* CONFIG_BT_A2DP_OPUS_DECODER */
 #define AVDT_NUM_SEPS      (3 \
 							+ AVDT_APTX_SEPS \
 							+ AVDT_LDAC_SEPS \
+							+ AVDT_OPUS_SEPS \
 							)
 #endif
 
