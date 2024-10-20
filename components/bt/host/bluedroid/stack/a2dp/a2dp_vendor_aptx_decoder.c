@@ -3,6 +3,9 @@
  */
 
 #include "common/bt_trace.h"
+#include "stack/a2dp_vendor_aptx.h"
+#include "stack/a2dp_vendor_aptx_hd.h"
+#include "stack/a2dp_vendor_aptx_ll.h"
 #include "stack/a2dp_vendor_aptx_decoder.h"
 
 
@@ -136,12 +139,46 @@ void a2dp_aptx_decoder_configure(const uint8_t* p_codec_info) {
         return;
     }
 
+    tA2DP_APTX_HD_CIE cie;
+    tA2D_STATUS status;
+
+    status = A2DP_ParseInfoAptx((tA2DP_APTX_CIE*)&cie, p_codec_info, FALSE);
+    if (status != A2D_SUCCESS) {
+        status = A2DP_ParseInfoAptxHd((tA2DP_APTX_HD_CIE*)&cie, p_codec_info,
+                                       FALSE);
+    }
+    if (status != A2D_SUCCESS) {
+        status = A2DP_ParseInfoAptxLl((tA2DP_APTX_LL_CIE*)&cie, p_codec_info,
+                                       FALSE);
+    }
+    if (status != A2D_SUCCESS) {
+        LOG_ERROR("%s: failed to parse codec info. 0x%x", __func__, status);
+        return;
+    }
+
+    uint32_t sr = 0;
+    if (cie.sampleRate == A2DP_APTX_SAMPLERATE_44100) {
+        sr = 44100;
+    } else if (cie.sampleRate == A2DP_APTX_SAMPLERATE_48000) {
+        sr = 48000;
+    }
+    LOG_INFO("%s: aptX Sampling frequency = %lu", __func__, sr);
+
+    if (cie.channelMode == A2DP_APTX_CHANNELS_STEREO) {
+        LOG_INFO("%s: aptX Channel mode: Stereo", __func__);
+    } else if (cie.channelMode == A2DP_APTX_CHANNELS_MONO) {
+        LOG_INFO("%s: aptX Channel mode: Mono", __func__);
+    }
+
     if (index == BTAV_A2DP_CODEC_INDEX_SINK_APTX_HD) {
         a2dp_aptx_decoder_cb.aptx_type = APTX_HD;
+        LOG_INFO("%s: aptX-HD", __func__);
     } else if (index == BTAV_A2DP_CODEC_INDEX_SINK_APTX_LL) {
         a2dp_aptx_decoder_cb.aptx_type = APTX_LL;
+        LOG_INFO("%s: aptX-LL", __func__);
     } else {
         a2dp_aptx_decoder_cb.aptx_type = APTX_STANDARD;
+        LOG_INFO("%s: aptX Standard", __func__);
     }
 
     aptx_finish(decoder_context);
