@@ -44,6 +44,7 @@ typedef struct {
 #define ESP_A2D_CIE_LEN_APTX_LL      (7)
 #define ESP_A2D_CIE_LEN_LDAC         (8)
 #define ESP_A2D_CIE_LEN_OPUS         (26)
+#define ESP_A2D_CIE_LEN_LC3PLUS         (12)
     union {
         uint8_t sbc[ESP_A2D_CIE_LEN_SBC];      /*!< SBC codec capabilities */
         uint8_t m12[ESP_A2D_CIE_LEN_M12];      /*!< MPEG-1,2 audio codec capabilities */
@@ -54,6 +55,7 @@ typedef struct {
         uint8_t aptx_ll[ESP_A2D_CIE_LEN_APTX_LL];    /*!< APTX-LL codec capabilities */
         uint8_t ldac[ESP_A2D_CIE_LEN_LDAC];    /*!< LDAC codec capabilities */
         uint8_t opus[ESP_A2D_CIE_LEN_OPUS];    /*!< OPUS codec capabilities */
+        uint8_t lc3plus[ESP_A2D_CIE_LEN_LC3PLUS];    /*!< LC3 Plus codec capabilities */
     } cie;                                     /*!< A2DP codec information element */
 } __attribute__((packed)) esp_a2d_mcc_t;
 
