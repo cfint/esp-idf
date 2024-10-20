@@ -43,6 +43,11 @@ struct osi_thread {
   struct work_queue **work_queues;      /*!< Point to queue array, and the priority inverse array index */
   osi_sem_t work_sem;
   osi_sem_t stop_sem;
+
+#if CONFIG_SPIRAM
+  StackType_t* xStack;
+  StaticTask_t xTaskBuffer;
+#endif
 };
 
 struct osi_thread_start_arg {
@@ -202,8 +207,22 @@ static void osi_thread_stop(osi_thread_t *thread)
     }
 }
 
+static osi_thread_t *_osi_thread_create(const char *name, size_t stack_size, int priority, osi_thread_core_t core, uint8_t work_queue_num, const size_t work_queue_len[], bool psram);
+
 //in linux, the stack_size, priority and core may not be set here, the code will be ignore the arguments
 osi_thread_t *osi_thread_create(const char *name, size_t stack_size, int priority, osi_thread_core_t core, uint8_t work_queue_num, const size_t work_queue_len[])
+{
+    return _osi_thread_create(name, stack_size, priority, core, work_queue_num, work_queue_len, false);
+}
+
+#if CONFIG_SPIRAM
+osi_thread_t *osi_thread_create_psram(const char *name, size_t stack_size, int priority, osi_thread_core_t core, uint8_t work_queue_num, const size_t work_queue_len[])
+{
+    return _osi_thread_create(name, stack_size, priority, core, work_queue_num, work_queue_len, true);
+}
+#endif
+
+static osi_thread_t *_osi_thread_create(const char *name, size_t stack_size, int priority, osi_thread_core_t core, uint8_t work_queue_num, const size_t work_queue_len[], bool psram)
 {
     int ret;
     struct osi_thread_start_arg start_arg = {0};
@@ -250,9 +269,29 @@ osi_thread_t *osi_thread_create(const char *name, size_t stack_size, int priorit
         goto _err;
     }
 
-    if (xTaskCreatePinnedToCore(osi_thread_run, name, stack_size, &start_arg, priority, &thread->thread_handle, core) != pdPASS) {
-        goto _err;
+#if CONFIG_SPIRAM
+    if (!psram) {
+#else
+    (void)psram;        
+#endif
+        if (xTaskCreatePinnedToCore(osi_thread_run, name, stack_size, &start_arg, priority, &thread->thread_handle, core) != pdPASS) {
+            goto _err;
+        }
+#if CONFIG_SPIRAM
+    } else {
+        thread->xStack = (uint8_t*)heap_caps_calloc(1, stack_size, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+        if (!thread->xStack) {
+            goto _err;
+        }
+        thread->thread_handle = xTaskCreateStaticPinnedToCore(osi_thread_run, name, stack_size, &start_arg, priority,
+                                                              thread->xStack,
+                                                              &thread->xTaskBuffer,
+                                                              core);
+        if (thread->thread_handle == NULL) {
+            goto _err;
+        }
     }
+#endif
 
     osi_sem_take(&start_arg.start_sem, OSI_SEM_MAX_TIMEOUT);
     osi_sem_free(&start_arg.start_sem);
@@ -262,6 +301,12 @@ osi_thread_t *osi_thread_create(const char *name, size_t stack_size, int priorit
 _err:
 
     if (thread) {
+#if CONFIG_SPIRAM
+        if (thread->xStack) {
+            free(thread->xStack);
+        }
+#endif
+
         if (start_arg.start_sem) {
             osi_sem_free(&start_arg.start_sem);
         }
@@ -302,6 +347,12 @@ void osi_thread_free(osi_thread_t *thread)
         return;
 
     osi_thread_stop(thread);
+
+#if CONFIG_SPIRAM
+    if (thread->xStack) {
+        free(thread->xStack);
+    }
+#endif
 
     for (int i = 0; i < thread->work_queue_num; i++) {
         if (thread->work_queues[i]) {

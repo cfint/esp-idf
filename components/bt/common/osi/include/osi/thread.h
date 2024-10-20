@@ -43,6 +43,13 @@ typedef enum {
  */
 osi_thread_t *osi_thread_create(const char *name, size_t stack_size, int priority, osi_thread_core_t core, uint8_t work_queue_num, const size_t work_queue_len[]);
 
+#if CONFIG_SPIRAM
+/*
+ * Create a thread or task with stack in PSRAM
+ */
+osi_thread_t *osi_thread_create_psram(const char *name, size_t stack_size, int priority, osi_thread_core_t core, uint8_t work_queue_num, const size_t work_queue_len[]);
+#endif
+
 /*
  * brief: Destroy a thread or task
  * param thread: point of thread handler
