@@ -43,6 +43,7 @@ tA2D_STATUS A2DP_ParseInfo(uint8_t* p_ie, const uint8_t* p_codec_info,
       break;
   }
 
+  LOG_ERROR("%s: unsupported codec type 0x%x", __func__, codec_type);
   return A2D_FAIL;
 }
 
@@ -60,6 +61,7 @@ bool A2DP_IsPeerSinkCodecValid(const uint8_t* p_codec_info) {
       break;
   }
 
+  LOG_ERROR("%s: unsupported codec type 0x%x", __func__, codec_type);
   return false;
 }
 
