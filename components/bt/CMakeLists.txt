@@ -801,6 +801,11 @@ if(CONFIG_BT_A2DP_LC3PLUS_DECODER)
     list(APPEND srcs ${lc3_srcs})
 endif()
 
+if(CONFIG_BT_A2DP_LC3PLUS_DECODER)
+    list(APPEND srcs "host/bluedroid/stack/a2dp/a2dp_vendor_lc3plus.c"
+                     "host/bluedroid/stack/a2dp/a2dp_vendor_lc3plus_decoder.c")
+endif()
+
 idf_component_register(SRCS "${srcs}"
                        INCLUDE_DIRS "${include_dirs}"
                        PRIV_INCLUDE_DIRS "${priv_include_dirs}"
