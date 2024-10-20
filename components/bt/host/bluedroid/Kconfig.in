@@ -26,27 +26,6 @@ config BT_BLUEDROID_PINNED_TO_CORE
     default 1 if BT_BLUEDROID_PINNED_TO_CORE_1
     default 0
 
-choice BT_BTC_TASK_PINNED_TO_CORE_CHOICE
-    prompt "The cpu core which BTC task run"
-    depends on BT_BLUEDROID_ENABLED && !FREERTOS_UNICORE
-    help
-        Which the cpu core to run BTC tasks. Can choose core0 and core1.
-        Can not specify no-affinity.
-
-    config BT_BTC_TASK_PINNED_TO_CORE_0
-        bool "Core 0 (PRO CPU)"
-    config BT_BTC_TASK_PINNED_TO_CORE_1
-        bool "Core 1 (APP CPU)"
-        depends on !FREERTOS_UNICORE
-endchoice
-
-config BT_BTC_TASK_PINNED_TO_CORE
-    int
-    depends on BT_BLUEDROID_ENABLED
-    default 0 if BT_BTC_TASK_PINNED_TO_CORE_0
-    default 1 if BT_BTC_TASK_PINNED_TO_CORE_1
-    default 0
-
 config BT_BTU_TASK_STACK_SIZE
     int "Bluetooth Bluedroid Host Stack task stack size"
     depends on BT_BLUEDROID_ENABLED

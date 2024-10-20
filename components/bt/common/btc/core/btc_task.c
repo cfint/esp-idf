@@ -75,7 +75,7 @@
 #include "btc_ble_mesh_time_scene_model.h"
 #endif /* #if CONFIG_BLE_MESH */
 
-#define BTC_TASK_PINNED_TO_CORE         (BT_BTC_TASK_PINNED_TO_CORE)
+#define BTC_TASK_PINNED_TO_CORE         (TASK_PINNED_TO_CORE)
 #define BTC_TASK_STACK_SIZE             (BT_BTC_TASK_STACK_SIZE + BT_TASK_EXTRA_STACK_SIZE)	//by menuconfig
 #define BTC_TASK_NAME                   "BTC_TASK"
 #define BTC_TASK_PRIO                   (BT_TASK_MAX_PRIORITIES - 6)

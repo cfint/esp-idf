@@ -66,7 +66,6 @@
 
 /* OS Configuration from User config (eg: sdkconfig) */
 #define TASK_PINNED_TO_CORE         UC_TASK_PINNED_TO_CORE
-#define BT_BTC_TASK_PINNED_TO_CORE  UC_BTC_TASK_PINNED_TO_CORE
 #define BT_TASK_MAX_PRIORITIES      configMAX_PRIORITIES
 #define BT_BTC_TASK_STACK_SIZE      UC_BTC_TASK_STACK_SIZE
 
