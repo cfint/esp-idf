@@ -112,6 +112,13 @@ config BT_A2DP_OPUS_DECODER
     help
         A2DP Opus decoder
 
+config BT_A2DP_LC3PLUS_DECODER
+    bool "LC3 Plus decoder"
+    depends on BT_A2DP_ENABLE
+    default n
+    help
+        A2DP LC3 Plus decoder
+
 config BT_SPP_ENABLED
     bool "SPP"
     depends on BT_CLASSIC_ENABLED
