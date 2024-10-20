@@ -842,6 +842,9 @@ if(CONFIG_BT_A2DP_AAC_DECODER)
 
     set_source_files_properties(host/bluedroid/external/arduino-fdk-aac/src/libFDK/nlc_dec.cpp PROPERTIES COMPILE_FLAGS -Wno-array-bounds)
 
+    list(APPEND srcs "host/bluedroid/stack/a2dp/a2dp_aac.c"
+                     "host/bluedroid/stack/a2dp/a2dp_aac_decoder.c")
+
 endif()
 
 idf_component_register(SRCS "${srcs}"
