@@ -794,6 +794,13 @@ if(CONFIG_BT_A2DP_OPUS_DECODER)
                      "host/bluedroid/stack/a2dp/a2dp_vendor_opus_decoder.c")
 endif()
 
+if(CONFIG_BT_A2DP_LC3PLUS_DECODER)
+    list(APPEND priv_include_dirs   "host/bluedroid/external/liblc3/include")
+
+    file(GLOB lc3_srcs "host/bluedroid/external/liblc3/src/*.c")
+    list(APPEND srcs ${lc3_srcs})
+endif()
+
 idf_component_register(SRCS "${srcs}"
                        INCLUDE_DIRS "${include_dirs}"
                        PRIV_INCLUDE_DIRS "${priv_include_dirs}"
