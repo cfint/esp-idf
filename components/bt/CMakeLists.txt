@@ -738,8 +738,8 @@ if(CONFIG_BT_ENABLED)
 endif()
 
 if(CONFIG_BT_A2DP_APTX_DECODER)
-    list(APPEND priv_include_dirs host/bluedroid/external/libfreeaptx)
-    list(APPEND aptx_dec_srcs "host/bluedroid/external/libfreeaptx/freeaptx.c")
+    list(APPEND priv_include_dirs host/bluedroid/external/libfreeaptx/main)
+    list(APPEND aptx_dec_srcs "host/bluedroid/external/libfreeaptx/main/freeaptx.c")
     list(APPEND srcs ${aptx_dec_srcs})
 
     list(APPEND srcs "host/bluedroid/stack/a2dp/a2dp_vendor_aptx.c"
