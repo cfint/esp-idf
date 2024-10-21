@@ -146,4 +146,4 @@
 
 [submodule "components/bt/host/bluedroid/external/liblc3"]
 	path = components/bt/host/bluedroid/external/liblc3
-	url = https://github.com/google/liblc3.git
+	url = https://github.com/cfint/liblc3.git
