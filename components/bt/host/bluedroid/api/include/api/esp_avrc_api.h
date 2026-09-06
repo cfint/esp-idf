@@ -38,7 +38,19 @@ typedef enum {
     ESP_AVRC_FEAT_FLAG_COVER_ART_GET_IMAGE_PROP = 0x0080,         /*!< Cover Art GetImageProperties */
     ESP_AVRC_FEAT_FLAG_COVER_ART_GET_IMAGE = 0x0100,              /*!< Cover Art GetImage */
     ESP_AVRC_FEAT_FLAG_COVER_ART_GET_LINKED_THUMBNAIL = 0x0200,   /*!< Cover Art GetLinkedThumbnail */
+    /* TG only features flag */
+    ESP_AVRC_FEAT_FLAG_TG_COVER_ART = 0x0100,                     /*!< TG support Cover Art */
 } esp_avrc_feature_flag_t;
+
+#define ESP_AVRC_CA_IMAGE_HANDLE_LEN    7        /*!< The image handle length is fixed to 7, specified by Basic Image Profile */
+#define ESP_AVRC_CA_MTU_MIN             255      /*!< Minimal MTU can be used in Cover Art OBEX connection */
+#define ESP_AVRC_CA_MTU_MAX             1691     /*!< Maximum MTU can be used in Cover Art OBEX connection */
+
+/// AVRC Cover Art connection error code
+typedef enum {
+    ESP_AVRC_COVER_ART_DISCONNECTED,              /*!< Cover Art connection disconnected or connection failed */
+    ESP_AVRC_COVER_ART_CONNECTED,                 /*!< Cover Art connection established */
+} esp_avrc_cover_art_conn_state_t;
 
 /// AVRC passthrough command code
 typedef enum {
@@ -135,6 +147,8 @@ typedef enum {
     ESP_AVRC_CT_REMOTE_FEATURES_EVT = 5,         /*!< feature of remote device indication event */
     ESP_AVRC_CT_GET_RN_CAPABILITIES_RSP_EVT = 6,     /*!< supported notification events capability of peer device */
     ESP_AVRC_CT_SET_ABSOLUTE_VOLUME_RSP_EVT = 7, /*!< set absolute volume response event */
+    ESP_AVRC_CT_COVER_ART_STATE_EVT = 8,         /*!< cover art client connection state changed event */
+    ESP_AVRC_CT_COVER_ART_DATA_EVT = 9,          /*!< cover art client data event */
 } esp_avrc_ct_cb_event_t;
 
 /// AVRC Target callback events
@@ -157,6 +171,8 @@ typedef enum {
     ESP_AVRC_MD_ATTR_GENRE = 0x20,                /*!< track genre */
     ESP_AVRC_MD_ATTR_PLAYING_TIME = 0x40          /*!< total album playing time in miliseconds */
 } esp_avrc_md_attr_mask_t;
+
+#define ESP_AVRC_MD_ATTR_COVER_ART 0x80             /*!< cover art image handle */
 
 /// AVRC event notification ids
 typedef enum {
@@ -337,6 +353,24 @@ typedef union {
     struct avrc_ct_set_volume_rsp_param {
         uint8_t volume;                          /*!< the volume which has actually been set, range is 0 to 0x7f, means 0% to 100% */
     } set_volume_rsp;                            /*!< set absolute volume response event */
+
+    /**
+     * @brief ESP_AVRC_CT_COVER_ART_STATE_EVT
+     */
+    struct avrc_ct_cover_art_state_param {
+        esp_avrc_cover_art_conn_state_t state;   /*!< indicate the Cover Art connection status */
+        esp_bt_status_t reason;                  /*!< the disconnect reason of Cover Art connection */
+    } cover_art_state;                           /*!< AVRC Cover Art connection state change event */
+
+    /**
+     * @brief ESP_AVRC_CT_COVER_ART_DATA_EVT
+     */
+    struct avrc_ct_cover_art_data_param {
+        esp_bt_status_t status;                 /*!< indicate whether the get operation is success, p_data is valid only when status is ESP_BT_STATUS_SUCCESS */
+        bool final;                             /*!< indicate whether this data event is the final one, true if we have received the entire object */
+        uint16_t data_len;                      /*!< the data length of this data event, in bytes */
+        uint8_t *p_data;                        /*!< pointer to data, should copy to other buff before event callback return */
+    } cover_art_data;                           /*!< AVRC Cover Art data event */
 } esp_avrc_ct_cb_param_t;
 
 /// AVRC target callback parameters
@@ -728,6 +762,90 @@ bool esp_avrc_rn_evt_bit_mask_operation(esp_avrc_bit_mask_op_t op, esp_avrc_rn_e
  */
 esp_err_t esp_avrc_tg_send_rn_rsp(esp_avrc_rn_event_ids_t event_id, esp_avrc_rn_rsp_t rsp,
                                   esp_avrc_rn_param_t *param);
+
+/**
+ *
+ * @brief           Start the process to establish OBEX connection used in Cover Art Client. Once the operation done,
+ *                  ESP_AVRC_CT_COVER_ART_STATE_EVT will come, operation result can be found in event param. This API
+ *                  can be used only when AVRC Cover Art feature is enabled.
+ *
+ * @param[in]       mtu: OBEX packet size, the range is [ESP_AVRC_CA_MTU_MIN, ESP_AVRC_CA_MTU_MAX], value outside the
+ *                  range will be automatically adjusted
+ *
+ * @return
+ *                  - ESP_OK: success
+ *                  - ESP_ERR_INVALID_STATE: if bluetooth stack is not enabled or AVRC CT is not initialized
+ *                  - ESP_ERR_NOT_SUPPORTED: if peer device does not support Cover Art function
+ *
+ */
+esp_err_t esp_avrc_ct_cover_art_connect(uint16_t mtu);
+
+/**
+ *
+ * @brief           Start the process to release the OBEX connection used in Cover Art Client.Once the operation done,
+ *                  ESP_AVRC_CT_COVER_ART_STATE_EVT will come, operation result can be found in event param. This API
+ *                  can be used only when AVRC Cover Art feature is enabled.
+ *
+ * @return
+ *                  - ESP_OK: success
+ *                  - ESP_ERR_INVALID_STATE: if bluetooth stack is not enabled or AVRC CT is not initialized
+ *                  - ESP_ERR_NOT_SUPPORTED: if peer device does not support Cover Art function
+ *
+ */
+esp_err_t esp_avrc_ct_cover_art_disconnect(void);
+
+/**
+ *
+ * @brief           Start the process to get image properties from Cover Art server. This API can be used only when AVRC
+ *                  Cover Art feature is enabled.
+ *
+ * @param[in]       image_handle: pointer to image handle with a length of ESP_AVRC_CA_IMAGE_HANDLE_LEN bytes, can be freed
+ *                  after this function return
+ *
+ * @return
+ *                  - ESP_OK: success
+ *                  - ESP_ERR_INVALID_STATE: if bluetooth stack is not enabled or AVRC CT is not initialized
+ *                  - ESP_ERR_NOT_SUPPORTED: if peer device does not support Cover Art function
+ *
+ */
+esp_err_t esp_avrc_ct_cover_art_get_image_properties(uint8_t *image_handle);
+
+/**
+ *
+ * @brief           Start the process to get image from Cover Art server. This API can be used only when AVRC Cover Art
+ *                  feature is enabled.
+ *
+ * @param[in]       image_handle: pointer to image handle with a length of ESP_AVRC_CA_IMAGE_HANDLE_LEN bytes, can be freed
+ *                  after this function return
+ *
+ * @param[in]       image_descriptor: pointer to image descriptor, will be cache internally by bluetooth stack, can be freed
+ *                  once this api return
+ *
+ * @param[in]       image_descriptor_len: the length of image descriptor
+ *
+ * @return
+ *                  - ESP_OK: success
+ *                  - ESP_ERR_INVALID_STATE: if bluetooth stack is not enabled or AVRC CT is not initialized
+ *                  - ESP_ERR_NOT_SUPPORTED: if peer device does not support Cover Art function
+ *
+ */
+esp_err_t esp_avrc_ct_cover_art_get_image(uint8_t *image_handle, uint8_t *image_descriptor, uint16_t image_descriptor_len);
+
+/**
+ *
+ * @brief           Start the process to get linked thumbnail from Cover Art server. This API can be used only when AVRC
+ *                  Cover Art feature is enabled.
+ *
+ * @param[in]       image_handle: pointer to image handle with a length of ESP_AVRC_CA_IMAGE_HANDLE_LEN bytes, can be freed
+ *                  after this function return
+ *
+ * @return
+ *                  - ESP_OK: success
+ *                  - ESP_ERR_INVALID_STATE: if bluetooth stack is not enabled or AVRC CT is not initialized
+ *                  - ESP_ERR_NOT_SUPPORTED: if peer device does not support Cover Art function
+ *
+ */
+esp_err_t esp_avrc_ct_cover_art_get_linked_thumbnail(uint8_t *image_handle);
 
 #ifdef __cplusplus
 }

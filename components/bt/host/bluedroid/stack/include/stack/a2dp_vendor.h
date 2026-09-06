@@ -24,7 +24,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-
+#include "a2dp_codec_api.h"
 #include "bt_av.h"
 
 /*****************************************************************************

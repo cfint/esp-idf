@@ -365,6 +365,21 @@ extern BOOLEAN SDP_FindProtocolListElemInRec (tSDP_DISC_REC *p_rec,
         UINT16 layer_uuid,
         tSDP_PROTOCOL_ELEM *p_elem);
 
+/*******************************************************************************
+**
+** Function         SDP_FindProtocolListElem
+**
+** Description      This function looks at the protocol list for a specific protocol
+**                  list element.
+**
+** Returns          TRUE if found, FALSE if not
+**                  If found, the passed protocol list element is filled in.
+**
+*******************************************************************************/
+extern BOOLEAN SDP_FindProtocolListElem (tSDP_DISC_ATTR *p_protocol_list,
+        UINT16 layer_uuid,
+        tSDP_PROTOCOL_ELEM *p_elem);
+
 
 /*******************************************************************************
 **

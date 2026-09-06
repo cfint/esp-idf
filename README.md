@@ -4,6 +4,56 @@
 
 ESP-IDF is the development framework for Espressif SoCs supported on Windows, Linux and macOS.
 
+# Supported Codecs
+
+| Codec | Rates / depth | Notes |
+|-------|---------------|-------|
+| **[LDAC](https://github.com/cfint/libldac-dec/tree/esp32)** | up to 96 kHz / 32-bit | 660 / 909 / 990 kbps |
+| **[LHDC V5](https://github.com/sprlightning/LHDC-V5-Decoder/tree/esp32-d0wd)** | up to 192 kHz / 24-bit | 400–1000 kbps |
+| **[aptX / aptX-HD / aptX-LL](https://github.com/cfint/libfreeaptx-esp/tree/master)** | up to 48 kHz / 24-bit | |
+| **[Opus](https://github.com/xiph/opus/tree/main)** | 48 kHz | |
+| **[LC3plus](https://github.com/cfint/liblc3/tree/esp32)** | up to 96 kHz | |
+| **[AAC](https://github.com/cfint/arduino-fdk-aac/tree/idf_component)** | up to 48 kHz | Helix decoder |
+| **[SBC](components/bt/host/bluedroid/external/sbc)** | 44.1 / 48 kHz | stock baseline |
+
+# New Functions
+
+| Function | Notes |
+|----------|-------|
+| AVRCP Absolute Volume Control | Bidirectional Absolute Volume Control, ported from ESP-IDF V5.1.6 |
+| AVRCP Coverart Display | Receive and display album coverart images sent by A2DP Source devices such as mobile phones, ported from ESP-IDF V6.1.0 & V5.5.2 |
+
+> WARNING: This branch needs PSRAM. If you are find a internal way, you can use the branch [a2dp-codecs/v6.1.0](https://github.com/sprlightning/esp-idf-bt-multiple-codecs/tree/a2dp-codecs/v6.1.0) .
+
+![](figures/test_lhdcv5_192kHz.jpg)
+
+# Contributions
+
+| User | Contributions |
+|------|---------------|
+| **[cfint](https://github.com/cfint)** | First port multiple decoders from AOSP to ESP‑IDF |
+| **[O2C14](https://github.com/O2C14)** | Independently implemented and open‑sourced the source code of the LDAC decoder |
+| **[WillyBilly06](https://github.com/WillyBilly06)** | Independently implemented and open‑sourced the source code of the LHDC V5 decoder |
+| **[sprlightning](https://github.com/sprlightning)** | Implemented the LHDC V5 decoder with Split Workspace support, continued maintaining cfint's ESP‑IDF V5.1.4, added LHDC V5 support, added AVRCP Absolute Volume Control, and added AVRCP Coverart Display |
+
+# How to USE
+
+First clone this repository, and then run `git submodule update --init --recursive`.
+
+## Example Demo
+
+The example demo is [MLX_Player_ClassicBT/tree/dev/v5.1.4](https://github.com/sprlightning/MLX_Player_ClassicBT/tree/dev/v5.1.4) , it proves **esp32-d0wd can decode LHDC V5 at 192kHz/24bit with 0 stuck and 0 pop**. More details please visit the [disscussion](https://github.com/sprlightning/esp-idf-bt-multiple-codecs/discussions) .
+
+> Example demo use the ESP32-CAM module (also called ESP-32S, chip is esp32-d0wd, 4MB Flash, 8MB PSRAM) with PCM5102A DAC module.
+
+![](figures/esp32cam_pcm512a.jpg)
+
+# How to Switch Codecs
+
+Use [Bluetooth Codec Changer](https://play.google.com/store/apps/details?id=com.amrg.bluetooth_codec_converter).
+
+![](figures/BluetoothCodecChanger.jpg)
+
 # ESP-IDF Release Support Schedule
 
 ![Support Schedule](https://dl.espressif.com/dl/esp-idf/support-periods.svg)

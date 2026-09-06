@@ -1,0 +1,21 @@
+# ESP32 16MB Flash Partition Table (Total size: 0x1000000 bytes)
+# Note: All partitions are 4KB aligned; app partitions are 64KB aligned
+# Structure: Name, Type, SubType, Offset, Size, Flags
+# 
+# - nvs: WiFi/BT config data (Size: 0x6000 = 24KB)
+# - otadata: OTA selection data (Size: 0x2000 = 8KB)
+# - phy_init: RF calibration data (Size: 0x1000 = 4KB)
+# - factory: Default firmware (Size: 0x9E0000 = 9.875MB, 64KB aligned)
+# - coredump: Crash logs (Size: 0x10000 = 64KB)
+# - spiffs: File system (Size: 0x5D0000 = 5.8125MB)
+# - nvs_key: Private data (Size: 0x10000 = 64KB)
+# - btstack: BTstack link key storage (Size: 0x8000 = 32KB)
+
+nvs,        data,   nvs,       0x9000,    0x6000,
+otadata,    data,   ota,       0xF000,    0x2000,
+phy_init,   data,   phy,       0x11000,   0x1000,
+factory,    app,    factory,   0x20000,   0x9E0000,
+coredump,   data,   coredump,  0xA00000,  0x10000,
+spiffs,     data,   spiffs,    0xA10000,  0x5D0000,
+nvs_key,    data,   nvs,       0xFE0000,  0x10000,
+btstack,    data,   0x99,      0xFF0000,  0x8000,

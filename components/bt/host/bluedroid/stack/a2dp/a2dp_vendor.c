@@ -30,6 +30,7 @@
 #include "stack/a2dp_vendor_ldac.h"
 #include "stack/a2dp_vendor_opus.h"
 #include "stack/a2dp_vendor_lc3plus.h"
+#include "stack/a2dp_vendor_lhdcv5.h"
 
 tA2D_STATUS A2DP_VendorParseInfo(uint8_t* p_ie, const uint8_t* p_codec_info,
                                  bool is_capability) {
@@ -77,6 +78,14 @@ tA2D_STATUS A2DP_VendorParseInfo(uint8_t* p_ie, const uint8_t* p_codec_info,
     return A2DP_ParseInfoLc3Plus((tA2DP_LC3PLUS_CIE*)p_ie, p_codec_info, is_capability);
   }
 #endif /* defined(LC3PLUS_DEC_INCLUDED) && LC3PLUS_DEC_INCLUDED == TRUE) */
+
+#if (defined(LHDCV5_DEC_INCLUDED) && LHDCV5_DEC_INCLUDED == TRUE)
+  // Check for LHDCV5
+  if (vendor_id == A2DP_LHDCV5_VENDOR_ID &&
+      codec_id == A2DP_LHDCV5_CODEC_ID) {
+    return A2DP_ParseInfoLhdcV5((tA2DP_LHDCV5_CIE*)p_ie, p_codec_info, is_capability);
+  }
+#endif /* defined(LHDCV5_DEC_INCLUDED) && LHDCV5_DEC_INCLUDED == TRUE) */
 
   // Add checks based on <vendor_id, codec_id>
   (void)vendor_id;
@@ -130,6 +139,14 @@ bool A2DP_IsVendorPeerSinkCodecValid(const uint8_t* p_codec_info) {
     return A2DP_IsVendorPeerSinkCodecValidLc3Plus(p_codec_info);
   }
 #endif /* defined(LC3PLUS_DEC_INCLUDED) && LC3PLUS_DEC_INCLUDED == TRUE) */
+
+#if (defined(LHDCV5_DEC_INCLUDED) && LHDCV5_DEC_INCLUDED == TRUE)
+  // Check for LHDCV5
+  if (vendor_id == A2DP_LHDCV5_VENDOR_ID &&
+      codec_id == A2DP_LHDCV5_CODEC_ID) {
+    return A2DP_IsVendorPeerSinkCodecValidLhdcV5(p_codec_info);
+  }
+#endif /* defined(LHDCV5_DEC_INCLUDED) && LHDCV5_DEC_INCLUDED == TRUE) */
 
   // Add checks based on <vendor_id, codec_id>
   (void)vendor_id;
@@ -196,6 +213,14 @@ tA2D_STATUS A2DP_IsVendorPeerSourceCodecSupported(const uint8_t* p_codec_info) {
     return A2DP_IsVendorPeerSourceCodecValidLc3Plus(p_codec_info);
   }
 #endif /* defined(LC3PLUS_DEC_INCLUDED) && LC3PLUS_DEC_INCLUDED == TRUE) */
+
+#if (defined(LHDCV5_DEC_INCLUDED) && LHDCV5_DEC_INCLUDED == TRUE)
+  // Check for LHDCV5
+  if (vendor_id == A2DP_LHDCV5_VENDOR_ID &&
+      codec_id == A2DP_LHDCV5_CODEC_ID) {
+    return A2DP_IsVendorPeerSourceCodecValidLhdcV5(p_codec_info);
+  }
+#endif /* defined(LHDCV5_DEC_INCLUDED) && LHDCV5_DEC_INCLUDED == TRUE) */
 
   // Add checks based on <vendor_id, codec_id> and peer codec capabilities
   // NOTE: Should be done only for local Sink codecs.
@@ -271,6 +296,14 @@ btav_a2dp_codec_index_t A2DP_VendorSinkCodecIndex(
   }
 #endif /* defined(LC3PLUS_DEC_INCLUDED) && LC3PLUS_DEC_INCLUDED == TRUE) */
 
+#if (defined(LHDCV5_DEC_INCLUDED) && LHDCV5_DEC_INCLUDED == TRUE)
+  // Check for LHDCV5
+  if (vendor_id == A2DP_LHDCV5_VENDOR_ID &&
+      codec_id == A2DP_LHDCV5_CODEC_ID) {
+    return A2DP_VendorSinkCodecIndexLhdcV5(p_codec_info);
+  }
+#endif /* defined(LHDCV5_DEC_INCLUDED) && LHDCV5_DEC_INCLUDED == TRUE) */
+
   // Add checks based on <vendor_id, codec_id>
   (void)vendor_id;
   (void)codec_id;
@@ -325,6 +358,14 @@ btav_a2dp_codec_index_t A2DP_VendorSourceCodecIndex(
   }
 #endif /* defined(LC3PLUS_DEC_INCLUDED) && LC3PLUS_DEC_INCLUDED == TRUE) */
 
+#if (defined(LHDCV5_DEC_INCLUDED) && LHDCV5_DEC_INCLUDED == TRUE)
+  // Check for LHDCV5
+  if (vendor_id == A2DP_LHDCV5_VENDOR_ID &&
+      codec_id == A2DP_LHDCV5_CODEC_ID) {
+    return A2DP_VendorSourceCodecIndexLhdcV5(p_codec_info);
+  }
+#endif /* defined(LHDCV5_DEC_INCLUDED) && LHDCV5_DEC_INCLUDED == TRUE) */
+
   // Add checks based on <vendor_id, codec_id>
   (void)vendor_id;
   (void)codec_id;
@@ -369,6 +410,13 @@ bool A2DP_VendorInitCodecConfig(btav_a2dp_codec_index_t codec_index, UINT8 *p_re
     return true;
   }
 #endif /* defined(LC3PLUS_DEC_INCLUDED) && LC3PLUS_DEC_INCLUDED == TRUE) */
+
+#if (defined(LHDCV5_DEC_INCLUDED) && LHDCV5_DEC_INCLUDED == TRUE)
+  // Check for LHDCV5
+  if (A2DP_VendorInitCodecConfigLhdcV5(codec_index, p_result)) {
+    return true;
+  }
+#endif /* defined(LHDCV5_DEC_INCLUDED) && LHDCV5_DEC_INCLUDED == TRUE) */
 
   (void)codec_index;
   (void)p_result;
@@ -423,6 +471,14 @@ bool A2DP_VendorBuildCodecConfig(UINT8 *p_src_cap, UINT8 *p_result) {
   }
 #endif /* defined(LC3PLUS_DEC_INCLUDED) && LC3PLUS_DEC_INCLUDED == TRUE) */
 
+#if (defined(LHDCV5_DEC_INCLUDED) && LHDCV5_DEC_INCLUDED == TRUE)
+  // Check for LHDCV5
+  if (vendor_id == A2DP_LHDCV5_VENDOR_ID &&
+      codec_id == A2DP_LHDCV5_CODEC_ID) {
+    return A2DP_VendorBuildCodecConfigLhdcV5(p_src_cap, p_result);
+  }
+#endif /* defined(LHDCV5_DEC_INCLUDED) && LHDCV5_DEC_INCLUDED == TRUE) */
+
   // Add checks based on <vendor_id, codec_id>
   (void)vendor_id;
   (void)codec_id;
@@ -475,6 +531,14 @@ const char* A2DP_VendorCodecName(const uint8_t* p_codec_info) {
     return A2DP_VendorCodecNameLc3Plus(p_codec_info);
   }
 #endif /* defined(LC3PLUS_DEC_INCLUDED) && LC3PLUS_DEC_INCLUDED == TRUE) */
+
+#if (defined(LHDCV5_DEC_INCLUDED) && LHDCV5_DEC_INCLUDED == TRUE)
+  // Check for LHDCV5
+  if (vendor_id == A2DP_LHDCV5_VENDOR_ID &&
+      codec_id == A2DP_LHDCV5_CODEC_ID) {
+    return A2DP_VendorCodecNameLhdcV5(p_codec_info);
+  }
+#endif /* defined(LHDCV5_DEC_INCLUDED) && LHDCV5_DEC_INCLUDED == TRUE) */
 
   // Add checks based on <vendor_id, codec_id>
   (void)vendor_id;
@@ -542,6 +606,14 @@ bool A2DP_VendorCodecTypeEquals(const uint8_t* p_codec_info_a,
   }
 #endif /* defined(LC3PLUS_DEC_INCLUDED) && LC3PLUS_DEC_INCLUDED == TRUE) */
 
+#if (defined(LHDCV5_DEC_INCLUDED) && LHDCV5_DEC_INCLUDED == TRUE)
+  // Check for LHDCV5
+  if (vendor_id_a == A2DP_LHDCV5_VENDOR_ID &&
+      codec_id_a == A2DP_LHDCV5_CODEC_ID) {
+    return A2DP_VendorCodecTypeEqualsLhdcV5(p_codec_info_a, p_codec_info_b);
+  }
+#endif /* defined(LHDCV5_DEC_INCLUDED) && LHDCV5_DEC_INCLUDED == TRUE) */
+
   // OPTIONAL: Add extra vendor-specific checks based on the
   // vendor-specific data stored in "p_codec_info_a" and "p_codec_info_b".
   (void)vendor_id_a;
@@ -595,6 +667,14 @@ const tA2DP_DECODER_INTERFACE* A2DP_GetVendorDecoderInterface(
     return A2DP_GetVendorDecoderInterfaceLc3Plus(p_codec_info);
   }
 #endif /* defined(LC3PLUS_DEC_INCLUDED) && LC3PLUS_DEC_INCLUDED == TRUE) */
+
+#if (defined(LHDCV5_DEC_INCLUDED) && LHDCV5_DEC_INCLUDED == TRUE)
+  // Check for LHDCV5
+  if (vendor_id == A2DP_LHDCV5_VENDOR_ID &&
+      codec_id == A2DP_LHDCV5_CODEC_ID) {
+    return A2DP_GetVendorDecoderInterfaceLhdcV5(p_codec_info);
+  }
+#endif /* defined(LHDCV5_DEC_INCLUDED) && LHDCV5_DEC_INCLUDED == TRUE) */
 
   (void)vendor_id;
   (void)codec_id;

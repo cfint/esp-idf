@@ -1,0 +1,16 @@
+# v5.1.4 适配：移除 a2dp_sink_int/ext_codec_utils（依赖 v6.1.0 组件拆分
+# esp_driver_i2s/dac，v5.1.4 无此组件；Cover Art 核心不依赖 A2DP 音频流）。
+# 如需 A2DP 音频输出请在 v6.1.0+ 上启用并恢复这两个依赖。
+dependencies:
+  bt_app_core_utils:
+    path: ${IDF_PATH}/examples/bluetooth/bluedroid/classic_bt/common/bt_app_core_utils
+  bredr_app_common_utils:
+    path: ${IDF_PATH}/examples/bluetooth/bluedroid/classic_bt/common/bredr_app_common_utils
+  a2dp_sink_common_utils:
+    path: ${IDF_PATH}/examples/bluetooth/bluedroid/classic_bt/common/a2dp_utils/a2dp_sink_common_utils
+  avrcp_common_utils:
+    path: ${IDF_PATH}/examples/bluetooth/bluedroid/classic_bt/common/avrcp_utils/avrcp_common_utils
+  avrcp_metadata_utils:
+    path: ${IDF_PATH}/examples/bluetooth/bluedroid/classic_bt/common/avrcp_utils/avrcp_metadata_utils
+  avrcp_cover_art_utils:
+    path: ${IDF_PATH}/examples/bluetooth/bluedroid/classic_bt/common/avrcp_utils/avrcp_cover_art_utils

@@ -1,5 +1,9 @@
-/*
+/**
+ * SPDX-FileCopyrightText: 2016 The Android Open Source Project
+ * 
  * SPDX-License-Identifier: Apache-2.0
+ * 
+ * a2dp_vendor_ldac_decoder.h
  */
 
 //
@@ -34,7 +38,13 @@ extern "C"
 ******************************************************************************/
 bool a2dp_ldac_decoder_init(decoded_data_callback_t decode_callback);
 
-
+/******************************************************************************
+**
+** Function         a2dp_ldac_decoder_cleanup
+**
+** Description      Cleanup the A2DP LDAC decoder |need ldacBT.h
+**
+******************************************************************************/
 void a2dp_ldac_decoder_cleanup();
 
 /******************************************************************************
@@ -61,6 +71,24 @@ ssize_t a2dp_ldac_decoder_decode_packet_header(BT_HDR* p_data);
 **
 ******************************************************************************/
 bool a2dp_ldac_decoder_decode_packet(BT_HDR* p_buf, unsigned char* buf, size_t buf_len);
+
+/******************************************************************************
+**
+** Function         a2dp_ldac_decoder_start
+**
+** Description      Start the A2DP LDAC decoder.
+**
+******************************************************************************/
+void a2dp_ldac_decoder_start();
+
+/******************************************************************************
+**
+** Function         a2dp_ldac_decoder_suspend
+**
+** Description      Suspend the A2DP LDAC decoder.
+**
+******************************************************************************/
+void a2dp_ldac_decoder_suspend();
 
 /******************************************************************************
 **

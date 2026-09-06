@@ -29,7 +29,13 @@
 
 #if (defined(AVRC_INCLUDED) && AVRC_INCLUDED == TRUE)
 
-#ifndef SDP_AVRCP_1_5
+#if AVRC_CA_INCLUDED == TRUE
+/* If Cover Art feature is enabled, set AVRCP version to 1.6 */
+#define SDP_AVRCP_1_6      TRUE
+#define SDP_AVRCP_1_5      FALSE
+#else
+/* Otherwise, set to 1.5 */
+#define SDP_AVRCP_1_6      FALSE
 #define SDP_AVRCP_1_5      TRUE
 #endif
 
@@ -52,7 +58,7 @@ const tSDP_PROTOCOL_ELEM  avrc_proto_list [] = {
 #if SDP_AVCTP_1_4 == TRUE
     {UUID_PROTOCOL_AVCTP, 1, {AVCT_REV_1_4, 0}  }
 #else
-#if (SDP_AVRCP_1_4 == TRUE || SDP_AVRCP_1_5 == TRUE)
+#if (SDP_AVRCP_1_5 == TRUE || SDP_AVRCP_1_6 == TRUE)
     {UUID_PROTOCOL_AVCTP, 1, {AVCT_REV_1_3, 0}  }
 #else
 #if AVRC_METADATA_INCLUDED == TRUE
@@ -64,7 +70,7 @@ const tSDP_PROTOCOL_ELEM  avrc_proto_list [] = {
 #endif
 };
 
-#if SDP_AVRCP_1_5 == TRUE
+#if (SDP_AVRCP_1_5 == TRUE || SDP_AVRCP_1_6 == TRUE)
 const tSDP_PROTO_LIST_ELEM  avrc_add_proto_list [] = {
     {
         AVRC_NUM_PROTO_ELEMS,
@@ -251,7 +257,7 @@ UINT16 AVRC_AddRecord(UINT16 service_uuid, char *p_service_name, char *p_provide
 
     /* add service class id list */
     class_list[0] = service_uuid;
-#if (SDP_AVCTP_1_4 == TRUE || SDP_AVRCP_1_5 == TRUE)
+#if (SDP_AVCTP_1_4 == TRUE || SDP_AVRCP_1_5 == TRUE || SDP_AVRCP_1_6 == TRUE)
     if ( service_uuid == UUID_SERVCLASS_AV_REMOTE_CONTROL ) {
         class_list[1] = UUID_SERVCLASS_AV_REM_CTRL_CONTROL;
         count = 2;
@@ -278,6 +284,8 @@ UINT16 AVRC_AddRecord(UINT16 service_uuid, char *p_service_name, char *p_provide
     }
 
     result &= SDP_AddProfileDescriptorList(sdp_handle, UUID_SERVCLASS_AV_REMOTE_CONTROL, AVRC_REV_1_5);
+#elif SDP_AVRCP_1_6 == TRUE
+    result &= SDP_AddProfileDescriptorList(sdp_handle, UUID_SERVCLASS_AV_REMOTE_CONTROL, AVRC_REV_1_6);
 #else
 #if AVRC_METADATA_INCLUDED == TRUE
     result &= SDP_AddProfileDescriptorList(sdp_handle, UUID_SERVCLASS_AV_REMOTE_CONTROL, AVRC_REV_1_3);
@@ -292,6 +300,13 @@ UINT16 AVRC_AddRecord(UINT16 service_uuid, char *p_service_name, char *p_provide
     } else if (service_uuid == UUID_SERVCLASS_AV_REM_CTRL_TARGET && media_player_virtual_filesystem_supported) {
         supported_feature |= AVRC_SUPF_TG_BROWSE;
     }
+#if AVRC_CA_INCLUDED
+    if (service_uuid == UUID_SERVCLASS_AV_REM_CTRL_CONTROL || service_uuid == UUID_SERVCLASS_AV_REMOTE_CONTROL) {
+        supported_feature |= AVRC_SUPF_CT_COVER_ART_GIP;
+        supported_feature |= AVRC_SUPF_CT_COVER_ART_GI;
+        supported_feature |= AVRC_SUPF_CT_COVER_ART_GLT;
+    }
+#endif
     /* add supported feature */
     p = temp;
     UINT16_TO_BE_STREAM(p, supported_feature);

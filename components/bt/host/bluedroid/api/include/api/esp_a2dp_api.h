@@ -32,6 +32,7 @@ typedef uint16_t esp_a2d_psc_t;
 
 /**
  * @brief A2DP media codec capabilities union
+ * 大部分CIE_LEN = CODEC_LEN - 2
  */
 typedef struct {
     esp_a2d_mct_t type;                        /*!< A2DP media codec type */
@@ -44,7 +45,9 @@ typedef struct {
 #define ESP_A2D_CIE_LEN_APTX_LL      (7)
 #define ESP_A2D_CIE_LEN_LDAC         (8)
 #define ESP_A2D_CIE_LEN_OPUS         (26)
-#define ESP_A2D_CIE_LEN_LC3PLUS         (12)
+#define ESP_A2D_CIE_LEN_LC3PLUS      (12)
+#define ESP_A2D_CIE_LEN_LHDCV5       (11)
+#define ESP_A2D_CIE_LEN_MIHC         (11)
     union {
         uint8_t sbc[ESP_A2D_CIE_LEN_SBC];      /*!< SBC codec capabilities */
         uint8_t m12[ESP_A2D_CIE_LEN_M12];      /*!< MPEG-1,2 audio codec capabilities */
@@ -56,6 +59,8 @@ typedef struct {
         uint8_t ldac[ESP_A2D_CIE_LEN_LDAC];    /*!< LDAC codec capabilities */
         uint8_t opus[ESP_A2D_CIE_LEN_OPUS];    /*!< OPUS codec capabilities */
         uint8_t lc3plus[ESP_A2D_CIE_LEN_LC3PLUS];    /*!< LC3 Plus codec capabilities */
+		uint8_t lhdcv5[ESP_A2D_CIE_LEN_LHDCV5];    /*!< LHDCV5 codec capabilities */
+        uint8_t mihc[ESP_A2D_CIE_LEN_MIHC];    /*!< MIHC codec capabilities */
     } cie;                                     /*!< A2DP codec information element */
 } __attribute__((packed)) esp_a2d_mcc_t;
 

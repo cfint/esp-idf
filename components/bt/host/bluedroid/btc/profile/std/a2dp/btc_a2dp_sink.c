@@ -32,13 +32,14 @@
 #include "oi_status.h"
 #include "osi/future.h"
 #include <assert.h>
+#include "esp_heap_caps.h"  // For PSRAM allocation
 
 #if (BTC_AV_SINK_INCLUDED == TRUE)
 
-#if (defined(APTX_DEC_INCLUDED) && APTX_DEC_INCLUDED == TRUE)
-#define BT_A2DP_SINK_BUF_SIZE   8192
+#if CONFIG_SPIRAM
+#define BT_A2DP_SINK_BUF_SIZE   (64 * 1024)
 #else
-#define BT_A2DP_SINK_BUF_SIZE   4096
+#define BT_A2DP_SINK_BUF_SIZE   (16 * 1024)
 #endif
 
 /*****************************************************************************
@@ -88,7 +89,11 @@ enum {
 #if CONFIG_SPIRAM
 #define A2DP_TASK_STACK_SIZE             (50 * 1024)
 #else
+#if BTC_TASK_STACK_SIZE
 #define A2DP_TASK_STACK_SIZE             (BTC_TASK_STACK_SIZE)
+#else
+#define A2DP_TASK_STACK_SIZE             (16 * 1024)
+#endif
 #endif
 #define A2DP_TASK_PRIO                   (BT_TASK_MAX_PRIORITIES - 6)
 #define A2DP_TASK_PINNED_TO_CORE         (1)
@@ -116,7 +121,11 @@ typedef struct {
     tBTC_A2DP_SINK_CB   btc_aa_snk_cb;
     osi_thread_t        *btc_aa_snk_task_hdl;
     const tA2DP_DECODER_INTERFACE* decoder;
+#if CONFIG_SPIRAM
+	unsigned char *decode_buf;  // Allocated from PSRAM
+#else
     unsigned char decode_buf[BT_A2DP_SINK_BUF_SIZE];
+#endif
     // a2dp_sink_media_pkt_seq_num_t   media_pkt_seq_num;
 } a2dp_sink_local_param_t;
 
@@ -526,7 +535,11 @@ static void btc_a2dp_sink_handle_inc_media(BT_HDR *p_msg)
 
     if (a2dp_sink_local_param.decoder->decode_packet) {
         unsigned char* buf = a2dp_sink_local_param.decode_buf;
+#if CONFIG_SPIRAM
+		size_t buf_len = BT_A2DP_SINK_BUF_SIZE;  // Size allocated from PSRAM
+#else
         size_t buf_len = sizeof(a2dp_sink_local_param.decode_buf);
+#endif
         a2dp_sink_local_param.decoder->decode_packet(p_msg, buf, buf_len);
     }
 }
@@ -651,6 +664,20 @@ static void btc_a2dp_sink_thread_init(UNUSED_ATTR void *context)
 
     a2dp_sink_local_param.btc_aa_snk_cb.RxSbcQ = fixed_queue_new(QUEUE_SIZE_MAX);
 
+    /* Allocate decode buffer from PSRAM if available */
+#if CONFIG_SPIRAM
+    a2dp_sink_local_param.decode_buf = (unsigned char *)heap_caps_malloc(BT_A2DP_SINK_BUF_SIZE, MALLOC_CAP_SPIRAM);
+    if (!a2dp_sink_local_param.decode_buf) {
+        APPL_TRACE_WARNING("PSRAM alloc failed");
+        a2dp_sink_local_param.decode_buf = (unsigned char *)osi_malloc(BT_A2DP_SINK_BUF_SIZE);
+    } else {
+        APPL_TRACE_EVENT("Decode buffer from PSRAM");
+    }
+#else
+    a2dp_sink_local_param.decode_buf = (unsigned char *)osi_malloc(BT_A2DP_SINK_BUF_SIZE);
+#endif
+    assert(a2dp_sink_local_param.decode_buf != NULL);
+
     btc_a2dp_control_init();
 }
 
@@ -674,6 +701,14 @@ static void btc_a2dp_sink_thread_cleanup(UNUSED_ATTR void *context)
 
     osi_event_delete(a2dp_sink_local_param.btc_aa_snk_cb.data_ready_event);
     a2dp_sink_local_param.btc_aa_snk_cb.data_ready_event = NULL;
+
+#if CONFIG_SPIRAM
+    /* Free decode buffer */
+    if (a2dp_sink_local_param.decode_buf) {
+        heap_caps_free(a2dp_sink_local_param.decode_buf);
+        a2dp_sink_local_param.decode_buf = NULL;
+    }
+#endif
 }
 
 #endif /* BTC_AV_SINK_INCLUDED */

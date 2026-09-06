@@ -39,6 +39,38 @@
 #define UC_BT_A2DP_ENABLED                  FALSE
 #endif
 
+//AVRCP
+#ifdef CONFIG_BT_AVRCP_ENABLED
+#define UC_BT_AVRCP_ENABLED                 TRUE
+#else
+/* v5.1.4: AVRCP is enabled together with A2DP (AVRC_INCLUDED=TRUE in bt_target.h) */
+#if (UC_BT_A2DP_ENABLED == TRUE)
+#define UC_BT_AVRCP_ENABLED                 TRUE
+#else
+#define UC_BT_AVRCP_ENABLED                 FALSE
+#endif
+#endif
+
+/* AVRCP Cover Art (CT role) - requires AVRCP 1.6; enabled by default with AVRCP */
+#if (UC_BT_AVRCP_ENABLED == TRUE)
+#ifndef UC_BT_AVRCP_CT_COVER_ART_ENABLED
+#define UC_BT_AVRCP_CT_COVER_ART_ENABLED    TRUE
+#endif
+#else
+#define UC_BT_AVRCP_CT_COVER_ART_ENABLED    FALSE
+#endif
+
+//GOEPC (BT) - required by AVRCP Cover Art
+#ifdef CONFIG_BT_GOEPC_ENABLED
+#define UC_BT_GOEPC_ENABLED                 CONFIG_BT_GOEPC_ENABLED
+#else
+#if (UC_BT_AVRCP_CT_COVER_ART_ENABLED == TRUE)
+#define UC_BT_GOEPC_ENABLED                 TRUE
+#else
+#define UC_BT_GOEPC_ENABLED                 FALSE
+#endif
+#endif
+
 #ifdef CONFIG_BT_A2DP_APTX_DECODER
 #define UC_BT_A2DP_APTX_DECODER_ENABLED    CONFIG_BT_A2DP_APTX_DECODER
 #else
@@ -67,6 +99,18 @@
 #define UC_BT_A2DP_AAC_DECODER_ENABLED    CONFIG_BT_A2DP_AAC_DECODER
 #else
 #define UC_BT_A2DP_AAC_DECODER_ENABLED    FALSE
+#endif
+
+#ifdef CONFIG_BT_A2DP_LHDCV5_DECODER
+#define UC_BT_A2DP_LHDCV5_DECODER_ENABLED    CONFIG_BT_A2DP_LHDCV5_DECODER
+#else
+#define UC_BT_A2DP_LHDCV5_DECODER_ENABLED    FALSE
+#endif
+
+#ifdef CONFIG_BT_A2DP_MIHC_DECODER
+#define UC_BT_A2DP_MIHC_DECODER_ENABLED    CONFIG_BT_A2DP_MIHC_DECODER
+#else
+#define UC_BT_A2DP_MIHC_DECODER_ENABLED    FALSE
 #endif
 
 //SPP

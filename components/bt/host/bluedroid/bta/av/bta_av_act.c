@@ -27,6 +27,7 @@
 #if defined(BTA_AV_INCLUDED) && (BTA_AV_INCLUDED == TRUE)
 
 #include <string.h>
+#include "esp_log.h"
 #include "bta/bta_av_api.h"
 #include "bta_av_int.h"
 #include "stack/avdt_api.h"
@@ -36,6 +37,10 @@
 #include "osi/list.h"
 #if( defined BTA_AR_INCLUDED ) && (BTA_AR_INCLUDED == TRUE)
 #include "bta/bta_ar_api.h"
+#endif
+#if BTA_AV_CA_INCLUDED
+#include "stack/goep_common.h"
+#include "stack/goepc_api.h"
 #endif
 
 #define LOG_TAG "bt_bta_av"
@@ -98,6 +103,10 @@ void bta_av_del_rc(tBTA_AV_RCB *p_rcb)
 
     p_scb = NULL;
     if (p_rcb->handle != BTA_AV_RC_HANDLE_NONE) {
+#if BTA_AV_CA_INCLUDED
+        /* reset cover art state */
+        bta_av_ca_reset(p_rcb);
+#endif
         if (p_rcb->shdl) {
             /* Validate array index*/
             if ((p_rcb->shdl - 1) < BTA_AV_NUM_STRS) {
@@ -127,9 +136,9 @@ void bta_av_del_rc(tBTA_AV_RCB *p_rcb)
         }
         /* else ACP && connected. do not clear the handle yet */
         AVRC_Close(rc_handle);
-        if (rc_handle == bta_av_cb.rc_acp_handle) {
-            bta_av_cb.rc_acp_handle = BTA_AV_RC_HANDLE_NONE;
-        }
+//         if (rc_handle == bta_av_cb.rc_acp_handle) {
+//             bta_av_cb.rc_acp_handle = BTA_AV_RC_HANDLE_NONE;
+//         }
         APPL_TRACE_EVENT("end del_rc handle: %d status=0x%x, rc_acp_handle:%d, lidx:%d",
                          p_rcb->handle, p_rcb->status, bta_av_cb.rc_acp_handle, p_rcb->lidx);
     }
@@ -302,7 +311,7 @@ UINT8 bta_av_rc_create(tBTA_AV_CB *p_cb, UINT8 role, UINT8 shdl, UINT8 lidx)
         bda = p_scb->peer_addr;
         status = BTA_AV_RC_ROLE_INT;
     } else {
-        if ((p_rcb = bta_av_get_rcb_by_shdl(shdl)) != NULL ) {
+        if (shdl != 0 && ((p_rcb = bta_av_get_rcb_by_shdl(shdl)) != NULL)) {
             APPL_TRACE_ERROR("bta_av_rc_create ACP handle exist for shdl:%d", shdl);
             return p_rcb->handle;
         }
@@ -1539,6 +1548,12 @@ tBTA_AV_FEAT bta_av_check_peer_rc_features (UINT16 service_uuid, UINT16 *rc_feat
                     if (categories & AVRC_SUPF_CT_BROWSE) {
                         peer_features |= (BTA_AV_FEAT_BROWSE);
                     }
+                    if ((service_uuid == UUID_SERVCLASS_AV_REM_CTRL_TARGET) && (categories & AVRC_SUPF_TG_COVER_ART)) {
+                        /* remote target support cover art */
+                        peer_features |= BTA_AV_FEAT_COVER_ART;
+                        /* print categories for DEBUG */
+                        APPL_TRACE_API("bta_av_check_peer_rc_features: peer TG supports cover art (categories 0x%x)", categories);
+                    }
                 }
             }
         }
@@ -1551,6 +1566,51 @@ tBTA_AV_FEAT bta_av_check_peer_rc_features (UINT16 service_uuid, UINT16 *rc_feat
     APPL_TRACE_DEBUG("peer_features:x%x, rc:x%x", peer_features, categories);
     return peer_features;
 }
+
+#if BTA_AV_CA_INCLUDED
+
+/*******************************************************************************
+**
+** Function         bta_av_extra_tg_cover_art_l2cap_psm
+**
+** Description      Extra the AVRC Cover Art L2CAP PSM of peer device from the
+**                  SDP record
+**
+** Returns          void
+**
+*******************************************************************************/
+static UINT16 bta_av_extra_tg_cover_art_l2cap_psm(void)
+{
+    tBTA_AV_CB          *p_cb = &bta_av_cb;
+    tSDP_DISC_REC       *p_rec = NULL;
+    tSDP_DISC_ATTR      *p_add_prot_desc, *p_prot_desc;
+    tSDP_PROTOCOL_ELEM  elem_l2cap, elem_obex;
+    UINT16              l2cap_psm = 0;
+
+    while (TRUE) {
+        /* get next record; if none found, we're done */
+        if ((p_rec = SDP_FindServiceInDb(p_cb->p_disc_db, UUID_SERVCLASS_AV_REM_CTRL_TARGET, p_rec)) == NULL) {
+            break;
+        }
+
+        p_add_prot_desc = SDP_FindAttributeInRec(p_rec, ATTR_ID_ADDITION_PROTO_DESC_LISTS);
+        if ((p_add_prot_desc != NULL) && (SDP_DISC_ATTR_TYPE(p_add_prot_desc->attr_len_type) == DATA_ELE_SEQ_DESC_TYPE)) {
+            /* Walk through all protocol descriptor list */
+            for (p_prot_desc = p_add_prot_desc->attr_value.v.p_sub_attr; p_prot_desc; p_prot_desc = p_prot_desc->p_next_attr) {
+                if(SDP_FindProtocolListElem(p_prot_desc, UUID_PROTOCOL_L2CAP, &elem_l2cap)
+                    && SDP_FindProtocolListElem(p_prot_desc, UUID_PROTOCOL_OBEX, &elem_obex))
+                {
+                    /* found */
+                    l2cap_psm = elem_l2cap.params[0];
+                    break;
+                }
+            }
+        }
+    }
+    return l2cap_psm;
+}
+
+#endif /* BTA_AV_CA_INCLUDED */
 
 /*******************************************************************************
 **
@@ -1573,6 +1633,9 @@ void bta_av_rc_disc_done(tBTA_AV_DATA *p_data)
     tBTA_AV_FEAT        peer_features;  /* peer features mask */
     UINT16              peer_ct_features;  /* peer features mask as controller */
     UINT16              peer_tg_features;  /* peer features mask as target */
+#if BTA_AV_CA_INCLUDED
+    UINT16              obex_l2cap_psm = 0; /* target obex l2cap psm */
+#endif
     UNUSED(p_data);
 
     APPL_TRACE_DEBUG("bta_av_rc_disc_done disc:x%x", p_cb->disc);
@@ -1600,6 +1663,13 @@ void bta_av_rc_disc_done(tBTA_AV_DATA *p_data)
     /* check peer version and whether support CT and TG role */
     peer_features = bta_av_check_peer_rc_features (UUID_SERVCLASS_AV_REMOTE_CONTROL, &peer_ct_features);
     peer_features |= bta_av_check_peer_rc_features (UUID_SERVCLASS_AV_REM_CTRL_TARGET, &peer_tg_features);
+#if BTA_AV_CA_INCLUDED
+    if (peer_features & BTA_AV_FEAT_COVER_ART) {
+        obex_l2cap_psm = bta_av_extra_tg_cover_art_l2cap_psm();
+        /* print obex_l2cap_psm for DEBUG */
+        APPL_TRACE_API("bta_av_rc_disc_done cover art supported, obex psm:0x%x", obex_l2cap_psm);
+    }
+#endif
 
     p_cb->disc = 0;
     utl_freebuf((void **) &p_cb->p_disc_db);
@@ -1618,6 +1688,9 @@ void bta_av_rc_disc_done(tBTA_AV_DATA *p_data)
                     p_cb->rcb[rc_handle].peer_features = peer_features;
                     p_cb->rcb[rc_handle].peer_ct_features = peer_ct_features;
                     p_cb->rcb[rc_handle].peer_tg_features = peer_tg_features;
+#if BTA_AV_CA_INCLUDED
+                    p_cb->rcb[rc_handle].cover_art_l2cap_psm = obex_l2cap_psm;
+#endif
                 }
 #if (BT_USE_TRACES == TRUE || BT_TRACE_APPL == TRUE)
                 else {
@@ -1636,6 +1709,11 @@ void bta_av_rc_disc_done(tBTA_AV_DATA *p_data)
         }
     } else {
         p_cb->rcb[rc_handle].peer_features = peer_features;
+        p_cb->rcb[rc_handle].peer_ct_features = peer_ct_features;
+        p_cb->rcb[rc_handle].peer_tg_features = peer_tg_features;
+#if BTA_AV_CA_INCLUDED
+        p_cb->rcb[rc_handle].cover_art_l2cap_psm = obex_l2cap_psm;
+#endif
         rc_feat.rc_handle =  rc_handle;
         rc_feat.peer_features = peer_features;
         rc_feat.peer_ct_features = peer_ct_features;
@@ -1676,6 +1754,10 @@ void bta_av_rc_closed(tBTA_AV_DATA *p_data)
             p_rcb->peer_features = 0;
             p_rcb->peer_ct_features = 0;
             p_rcb->peer_tg_features = 0;
+#if BTA_AV_CA_INCLUDED
+            /* reset cover art state */
+            bta_av_ca_reset(p_rcb);
+#endif
             APPL_TRACE_DEBUG("       shdl:%d, lidx:%d", p_rcb->shdl, p_rcb->lidx);
             if (p_rcb->shdl) {
                 if ((p_rcb->shdl - 1) < BTA_AV_NUM_STRS) {
@@ -1711,7 +1793,8 @@ void bta_av_rc_closed(tBTA_AV_DATA *p_data)
                 bta_av_del_rc(p_rcb);
 
                 /* if the AVRCP is no longer listening, create the listening channel */
-                if (bta_av_cb.rc_acp_handle == BTA_AV_RC_HANDLE_NONE && bta_av_cb.features & BTA_AV_FEAT_RCTG) {
+                if (bta_av_cb.rc_acp_handle == p_msg->handle && bta_av_cb.features & BTA_AV_FEAT_RCTG) {
+                    bta_av_cb.rc_acp_handle = BTA_AV_RC_HANDLE_NONE;
                     bta_av_rc_create(&bta_av_cb, AVCT_ACP, 0, BTA_AV_NUM_LINKS + 1);
                 }
             }
@@ -1746,8 +1829,10 @@ void bta_av_rc_disc(UINT8 disc)
 {
     tBTA_AV_CB   *p_cb = &bta_av_cb;
     tAVRC_SDP_DB_PARAMS db_params;
+    APPL_TRACE_API("bta_av_rc_disc disc:0x%x", disc);   // test OK, print disc for DEBUG
     UINT16              attr_list[] = {ATTR_ID_SERVICE_CLASS_ID_LIST,
                                        ATTR_ID_BT_PROFILE_DESC_LIST,
+                                       ATTR_ID_ADDITION_PROTO_DESC_LISTS,
                                        ATTR_ID_SUPPORTED_FEATURES
                                       };
     UINT8       hdi;
@@ -1785,7 +1870,7 @@ void bta_av_rc_disc(UINT8 disc)
         if (p_cb->p_disc_db) {
             /* set up parameters */
             db_params.db_len = BTA_AV_DISC_BUF_SIZE;
-            db_params.num_attr = 3;
+            db_params.num_attr = 4;
             db_params.p_db = p_cb->p_disc_db;
             db_params.p_attrs = attr_list;
 

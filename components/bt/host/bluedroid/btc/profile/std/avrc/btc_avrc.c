@@ -170,8 +170,7 @@ bool btc_avrc_ct_init_p(void)
 bool btc_avrc_tg_connected_p(void)
 {
     return (s_rc_tg_init == BTC_RC_TG_INIT_MAGIC) &&
-           (btc_rc_cb.rc_connected == TRUE) &&
-           (btc_rc_cb.rc_features & BTA_AV_FEAT_RCCT);
+           (btc_rc_cb.rc_connected == TRUE);
 }
 
 bool btc_avrc_ct_connected_p(void)
@@ -179,6 +178,60 @@ bool btc_avrc_ct_connected_p(void)
     return (s_rc_ct_init == BTC_RC_CT_INIT_MAGIC) &&
            (btc_rc_cb.rc_connected == TRUE) &&
            (btc_rc_cb.rc_features & BTA_AV_FEAT_RCTG);
+}
+
+#if BTC_AV_CA_INCLUDED
+bool btc_avrc_ct_check_cover_art_support(void)
+{
+    return (btc_rc_cb.rc_features & BTA_AV_FEAT_COVER_ART);
+}
+#endif
+
+void btc_avrc_arg_deep_copy(btc_msg_t *msg, void *p_dest, void *p_src)
+{
+    btc_avrc_args_t *dst = (btc_avrc_args_t *)p_dest;
+    btc_avrc_args_t *src = (btc_avrc_args_t *)p_src;
+    size_t len;
+
+    switch (msg->act) {
+#if BTC_AV_CA_INCLUDED
+    case BTC_AVRC_CT_API_COVER_ART_GET_IMAGE_EVT:
+        len = src->ca_get_img.image_descriptor_len;
+        dst->ca_get_img.image_descriptor = (uint8_t *)osi_malloc(len);
+        if (dst->ca_get_img.image_descriptor) {
+            memcpy(dst->ca_get_img.image_descriptor, src->ca_get_img.image_descriptor, len);
+            dst->ca_get_img.image_descriptor_len = len;
+        } else {
+            BTC_TRACE_ERROR("%s %d no mem\n", __FUNCTION__, msg->act);
+            dst->ca_get_img.image_descriptor_len = 0;
+        }
+        break;
+#endif
+    default:
+        BTC_TRACE_DEBUG("%s Unhandled deep copy %d\n", __FUNCTION__, msg->act);
+        UNUSED(dst);
+        UNUSED(src);
+        UNUSED(len);
+        break;
+    }
+}
+
+void btc_avrc_arg_deep_free(btc_msg_t *msg)
+{
+    btc_avrc_args_t *arg = (btc_avrc_args_t *)msg->arg;
+
+    switch (msg->act) {
+#if BTC_AV_CA_INCLUDED
+    case BTC_AVRC_CT_API_COVER_ART_GET_IMAGE_EVT:
+        if (arg->ca_get_img.image_descriptor) {
+            osi_free(arg->ca_get_img.image_descriptor);
+        }
+        break;
+#endif
+    default:
+        BTC_TRACE_DEBUG("%s Unhandled deep free %d\n", __FUNCTION__, msg->act);
+        break;
+    }
 }
 
 void btc_avrc_tg_arg_deep_copy(btc_msg_t *msg, void *p_dest, void *p_src)
@@ -456,7 +509,7 @@ static void handle_rc_connect (tBTA_AV_RC_OPEN *p_rc_open)
             btc_avrc_ct_cb_to_app(ESP_AVRC_CT_CONNECTION_STATE_EVT, &param);
         }
 
-        if (p_rc_open->peer_features & BTA_AV_FEAT_RCCT) {
+        if (btc_avrc_tg_init_p()) {
             esp_avrc_tg_cb_param_t param;
             memset(&param, 0, sizeof(esp_avrc_tg_cb_param_t));
             param.conn_stat.connected = true;
@@ -499,12 +552,27 @@ static void handle_rc_disconnect (tBTA_AV_RC_CLOSE *p_rc_close)
     // clean up the state
     btc_rc_cb.rc_handle = 0;
     btc_rc_cb.rc_connected = FALSE;
-
+#if BTC_AV_CA_INCLUDED
+    bool cover_art_connected = btc_rc_cb.rc_cover_art_connected;
+    btc_rc_cb.rc_cover_art_connected = FALSE;
+#endif
     btc_rc_cb.rc_features = 0;
     btc_rc_cb.rc_ct_features = 0;
     btc_rc_cb.rc_tg_features = 0;
     memset(btc_rc_cb.rc_addr, 0, sizeof(BD_ADDR));
     memset(btc_rc_cb.rc_ntf, 0, sizeof(btc_rc_cb.rc_ntf));
+
+#if BTC_AV_CA_INCLUDED
+    /* report connection state */
+    if (cover_art_connected) {
+        /* if rc disconnect, cover art disconnect too */
+        esp_avrc_ct_cb_param_t param;
+        memset(&param, 0, sizeof(esp_avrc_ct_cb_param_t));
+        param.cover_art_state.state = ESP_AVRC_COVER_ART_DISCONNECTED;
+        param.cover_art_state.reason = BT_STATUS_FAIL;
+        btc_avrc_ct_cb_to_app(ESP_AVRC_CT_COVER_ART_STATE_EVT, &param);
+    }
+#endif
 
     /* report connection state */
     if (rc_features & BTA_AV_FEAT_RCTG) {
@@ -515,7 +583,7 @@ static void handle_rc_disconnect (tBTA_AV_RC_CLOSE *p_rc_close)
         btc_avrc_ct_cb_to_app(ESP_AVRC_CT_CONNECTION_STATE_EVT, &param);
     }
 
-    if (rc_features & BTA_AV_FEAT_RCCT) {
+    if (btc_avrc_tg_init_p()) {
         esp_avrc_tg_cb_param_t param;
         memset(&param, 0, sizeof(esp_avrc_ct_cb_param_t));
         param.conn_stat.connected = false;
@@ -941,14 +1009,10 @@ void btc_rc_handler(tBTA_AV_EVT event, tBTA_AV *p_data)
                 memcpy(param.conn_stat.remote_bda, btc_rc_cb.rc_addr, sizeof(esp_bd_addr_t));
                 btc_avrc_ct_cb_to_app(ESP_AVRC_CT_CONNECTION_STATE_EVT, &param);
             }
-            if ((p_data->rc_feat.peer_features & BTA_AV_FEAT_RCCT) &&
-                !(old_feats & BTA_AV_FEAT_RCCT)) {
-                esp_avrc_tg_cb_param_t param;
-                memset(&param, 0, sizeof(esp_avrc_ct_cb_param_t));
-                param.conn_stat.connected = true;
-                memcpy(param.conn_stat.remote_bda, btc_rc_cb.rc_addr, sizeof(esp_bd_addr_t));
-                btc_avrc_tg_cb_to_app(ESP_AVRC_CT_CONNECTION_STATE_EVT, &param);
-            }
+            /**
+             * @note ESP_AVRC_TG_CONNECTION_STATE_EVT has been reported on rc connect/disconnect event,
+             * it doesn't rely on the SDP results.
+             */
         } while (0);
         btc_rc_cb.rc_features = p_data->rc_feat.peer_features;
         btc_rc_cb.rc_ct_features = p_data->rc_feat.peer_ct_features;
@@ -967,6 +1031,36 @@ void btc_rc_handler(tBTA_AV_EVT event, tBTA_AV *p_data)
         handle_rc_passthrough_cmd(&p_data->remote_cmd);
     }
     break;
+#if BTC_AV_CA_INCLUDED
+    case BTA_AV_CA_STATUS_EVT: {
+        btc_rc_cb.rc_cover_art_connected = p_data->ca_status.connected;
+        esp_avrc_ct_cb_param_t param;
+        memset(&param, 0, sizeof(esp_avrc_ct_cb_param_t));
+        if (p_data->ca_status.connected) {
+            param.cover_art_state.state = ESP_AVRC_COVER_ART_CONNECTED;
+        }
+        else {
+            param.cover_art_state.state = ESP_AVRC_COVER_ART_DISCONNECTED;
+        }
+        param.cover_art_state.reason = p_data->ca_status.reason;
+        btc_avrc_ct_cb_to_app(ESP_AVRC_CT_COVER_ART_STATE_EVT, &param);
+    }
+    break;
+    case BTA_AV_CA_DATA_EVT: {
+        esp_avrc_ct_cb_param_t param;
+        memset(&param, 0, sizeof(esp_avrc_ct_cb_param_t));
+        param.cover_art_data.status = p_data->ca_data.status;
+        param.cover_art_data.final = p_data->ca_data.final;
+        param.cover_art_data.data_len = p_data->ca_data.data_len;
+        param.cover_art_data.p_data = p_data->ca_data.p_data;
+        btc_avrc_ct_cb_to_app(ESP_AVRC_CT_COVER_ART_DATA_EVT, &param);
+        /* free the data packet now */
+        if (p_data->ca_data.p_hdr != NULL) {
+            osi_free(p_data->ca_data.p_hdr);
+        }
+    }
+    break;
+#endif /* BTC_AV_CA_INCLUDED */
     default:
         BTC_TRACE_DEBUG("Unhandled RC event : 0x%x", event);
     }
@@ -1267,6 +1361,67 @@ static bt_status_t btc_avrc_ct_send_passthrough_cmd(uint8_t tl, uint8_t key_code
     return status;
 }
 
+#if BTC_AV_CA_INCLUDED
+
+static void btc_avrc_ct_cover_art_connect(UINT16 mtu)
+{
+    if (!btc_rc_cb.rc_cover_art_connected) {
+        BTA_AvCaOpen(btc_rc_cb.rc_handle, mtu);
+    }
+    else {
+        BTC_TRACE_WARNING("%s: cover art already connected", __FUNCTION__);
+    }
+    return;
+}
+
+static void btc_avrc_ct_cover_art_disconnect(void)
+{
+    if (btc_rc_cb.rc_cover_art_connected) {
+        BTA_AvCaClose(btc_rc_cb.rc_handle);
+    }
+    else {
+        BTC_TRACE_WARNING("%s: cover art not connected", __FUNCTION__);
+    }
+    return;
+}
+
+static void btc_avrc_ct_cover_art_get_image_properties(UINT8 *image_handle)
+{
+    if (btc_rc_cb.rc_cover_art_connected) {
+        BTA_AvCaGet(btc_rc_cb.rc_handle, BTA_AV_CA_GET_IMAGE_PROPERTIES, image_handle, NULL, 0);
+    }
+    else {
+        BTC_TRACE_WARNING("%s: cover art not connected", __FUNCTION__);
+    }
+    return;
+}
+
+static void btc_avrc_ct_cover_art_get_image(UINT8 *image_handle, UINT8 *image_descriptor, UINT16 image_descriptor_len)
+{
+    if (image_descriptor == NULL || image_descriptor_len == 0) {
+        return;
+    }
+    if (btc_rc_cb.rc_cover_art_connected) {
+        BTA_AvCaGet(btc_rc_cb.rc_handle, BTA_AV_CA_GET_IMAGE, image_handle, image_descriptor, image_descriptor_len);
+    }
+    else {
+        BTC_TRACE_WARNING("%s: cover art not connected", __FUNCTION__);
+    }
+    return;
+}
+
+static void btc_avrc_ct_cover_art_get_linked_thumbnail(UINT8 *image_handle)
+{
+    if (btc_rc_cb.rc_cover_art_connected) {
+        BTA_AvCaGet(btc_rc_cb.rc_handle, BTA_AV_CA_GET_LINKED_THUMBNAIL, image_handle, NULL, 0);
+    }
+    else {
+        BTC_TRACE_WARNING("%s: cover art not connected", __FUNCTION__);
+    }
+    return;
+}
+
+#endif /* BTC_AV_CA_INCLUDED */
 
 /*******************************************************************************
 **
@@ -1418,6 +1573,28 @@ void btc_avrc_ct_call_handler(btc_msg_t *msg)
         btc_avrc_ct_send_set_absolute_volume_cmd(arg->set_abs_vol_cmd.tl, arg->set_abs_vol_cmd.volume);
         break;
     }
+#if BTC_AV_CA_INCLUDED
+    case BTC_AVRC_CT_API_COVER_ART_CONNECT_EVT: {
+        btc_avrc_ct_cover_art_connect(arg->ca_conn.mtu);
+        break;
+    }
+    case BTC_AVRC_CT_API_COVER_ART_DISCONNECT_EVT: {
+        btc_avrc_ct_cover_art_disconnect();
+        break;
+    }
+    case BTC_AVRC_CT_API_COVER_ART_GET_IMAGE_PROPERTIES_EVT: {
+        btc_avrc_ct_cover_art_get_image_properties(arg->ca_get_img_prop.image_handle);
+        break;
+    }
+    case BTC_AVRC_CT_API_COVER_ART_GET_IMAGE_EVT: {
+        btc_avrc_ct_cover_art_get_image(arg->ca_get_img.image_handle, arg->ca_get_img.image_descriptor, arg->ca_get_img.image_descriptor_len);
+        break;
+    }
+    case BTC_AVRC_CT_API_COVER_ART_GET_LINKED_THUMBNAIL_EVT: {
+        btc_avrc_ct_cover_art_get_linked_thumbnail(arg->ca_get_lk_thn.image_handle);
+        break;
+    }
+#endif
     default:
         BTC_TRACE_WARNING("%s : unhandled event: %d\n", __FUNCTION__, msg->act);
     }

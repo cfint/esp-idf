@@ -1,0 +1,53 @@
+menu "A2DP Sink Stream EXT Example Configuration"
+    config EXAMPLE_LOCAL_DEVICE_NAME
+        string "Local Device Name"
+        default "ESP_SPEAKER"
+        help
+            Use this option to set local device name.
+
+    config EXAMPLE_A2DP_SINK_OUTPUT_INTERNAL_DAC
+        bool "Output internal DAC"
+        default n
+        help
+            Set this option to output audio directly to internal DAC.
+
+    config EXAMPLE_A2DP_SINK_OUTPUT_EXTERNAL_I2S
+        bool "Output external I2S"
+        default y
+        help
+            Set this option to output audio to external I2S codec.
+
+    choice EXAMPLE_A2DP_SINK_OUTPUT
+        prompt "A2DP Sink Output"
+        default EXAMPLE_A2DP_SINK_OUTPUT_EXTERNAL_I2S
+        help
+            Choose the output interface for A2DP Sink audio.
+
+        config EXAMPLE_A2DP_SINK_OUTPUT_EXTERNAL_I2S
+            bool "External I2S"
+        config EXAMPLE_A2DP_SINK_OUTPUT_INTERNAL_DAC
+            bool "Internal DAC"
+    endchoice
+
+    config EXAMPLE_I2S_BCK_PIN
+        int "I2S BCK GPIO"
+        default 26
+        depends on EXAMPLE_A2DP_SINK_OUTPUT_EXTERNAL_I2S
+        help
+            GPIO for I2S bit clock
+
+    config EXAMPLE_I2S_LRCK_PIN
+        int "I2S LRCK (WS) GPIO"
+        default 22
+        depends on EXAMPLE_A2DP_SINK_OUTPUT_EXTERNAL_I2S
+        help
+            GPIO for I2S word select
+
+    config EXAMPLE_I2S_DATA_PIN
+        int "I2S DATA GPIO"
+        default 25
+        depends on EXAMPLE_A2DP_SINK_OUTPUT_EXTERNAL_I2S
+        help
+            GPIO for I2S data output
+
+endmenu

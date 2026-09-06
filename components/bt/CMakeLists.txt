@@ -111,6 +111,8 @@ if(CONFIG_BT_ENABLED)
             host/bluedroid/stack/avdt/include
             host/bluedroid/stack/a2dp/include
             host/bluedroid/stack/rfcomm/include
+            host/bluedroid/stack/goep/include
+            host/bluedroid/stack/obex/include
             host/bluedroid/stack/include
             host/bluedroid/common/include)
 
@@ -136,6 +138,8 @@ if(CONFIG_BT_ENABLED)
                    "host/bluedroid/bta/av/bta_av_aact.c"
                    "host/bluedroid/bta/av/bta_av_act.c"
                    "host/bluedroid/bta/av/bta_av_api.c"
+                   "host/bluedroid/bta/av/bta_av_ca_act.c"
+                   "host/bluedroid/bta/av/bta_av_ca_sm.c"
                    "host/bluedroid/bta/av/bta_av_cfg.c"
                    "host/bluedroid/bta/av/bta_av_ci.c"
                    "host/bluedroid/bta/av/bta_av_main.c"
@@ -295,6 +299,12 @@ if(CONFIG_BT_ENABLED)
                    "host/bluedroid/stack/avrc/avrc_pars_tg.c"
                    "host/bluedroid/stack/avrc/avrc_sdp.c"
                    "host/bluedroid/stack/avrc/avrc_utils.c"
+                   "host/bluedroid/stack/goep/goepc_api.c"
+                   "host/bluedroid/stack/goep/goepc_main.c"
+                   "host/bluedroid/stack/obex/obex_api.c"
+                   "host/bluedroid/stack/obex/obex_main.c"
+                   "host/bluedroid/stack/obex/obex_tl_l2cap.c"
+                   "host/bluedroid/stack/obex/obex_tl_rfcomm.c"
                    "host/bluedroid/stack/hid/hidd_api.c"
                    "host/bluedroid/stack/hid/hidd_conn.c"
                    "host/bluedroid/stack/hid/hidh_api.c"
@@ -843,6 +853,27 @@ if(CONFIG_BT_A2DP_AAC_DECODER)
 
 endif()
 
+if(CONFIG_BT_A2DP_LHDCV5_DECODER)
+    list(APPEND priv_include_dirs host/bluedroid/external/LHDC-V5-Decoder/decoder)
+    list(APPEND lhdcv5_dec_srcs "host/bluedroid/external/LHDC-V5-Decoder/decoder/lhdc_bit_reader.c"
+									"host/bluedroid/external/LHDC-V5-Decoder/decoder/lhdc_dec.c"
+									"host/bluedroid/external/LHDC-V5-Decoder/decoder/lhdc_diag_config.c"
+									"host/bluedroid/external/LHDC-V5-Decoder/decoder/lhdc_entropy_dec.c"
+									"host/bluedroid/external/LHDC-V5-Decoder/decoder/lhdc_imdct.c"
+									"host/bluedroid/external/LHDC-V5-Decoder/decoder/lhdc_sns_synth.c"
+									"host/bluedroid/external/LHDC-V5-Decoder/decoder/lhdc_tables.c")
+    list(APPEND srcs ${lhdcv5_dec_srcs})
+
+    list(APPEND srcs "host/bluedroid/stack/a2dp/a2dp_vendor_lhdcv5.c"
+                     "host/bluedroid/stack/a2dp/a2dp_vendor_lhdcv5_decoder.c")
+
+endif()
+
+if(CONFIG_BT_A2DP_MIHC_DECODER)
+    list(APPEND srcs "host/bluedroid/stack/a2dp/a2dp_vendor_mihc.c"
+                     "host/bluedroid/stack/a2dp/a2dp_vendor_mihc_decoder.c")
+endif()
+
 idf_component_register(SRCS "${srcs}"
                        INCLUDE_DIRS "${include_dirs}"
                        PRIV_INCLUDE_DIRS "${priv_include_dirs}"
@@ -890,6 +921,9 @@ if(CONFIG_BT_ENABLED)
     endif()
     if(CONFIG_BT_A2DP_AAC_DECODER)
         target_compile_definitions(${COMPONENT_TARGET} PRIVATE "-DESP32")
+    endif()
+	if(CONFIG_BT_A2DP_LHDCV5_DECODER)
+        target_compile_options(${COMPONENT_LIB} PRIVATE -O3)
     endif()
 endif()
 

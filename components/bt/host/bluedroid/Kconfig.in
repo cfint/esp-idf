@@ -61,6 +61,13 @@ config BT_A2DP_ENABLE
     help
         Advanced Audio Distrubution Profile
 
+config BT_A2DP_SBC_DECODER
+    bool "SBC decoder"
+    depends on BT_A2DP_ENABLE
+    default n
+    help
+        A2DP SBC decoder
+
 config BT_A2DP_APTX_DECODER
     bool "aptX decoder"
     depends on BT_A2DP_ENABLE
@@ -96,6 +103,69 @@ config BT_A2DP_AAC_DECODER
     select SPIRAM
     help
         A2DP AAC decoder
+		
+config BT_A2DP_LHDCV5_DECODER
+    bool "LHDCV5 decoder"
+    depends on BT_A2DP_ENABLE
+    default n
+    help
+        A2DP LHDCV5 decoder
+
+config BT_A2DP_LHDCV3_DECODER
+    bool "LHDCV3 decoder"
+    depends on BT_A2DP_ENABLE
+    default n
+    help
+        A2DP LHDCV3 decoder
+
+config BT_A2DP_LHDCV2_DECODER
+    bool "LHDCV2 decoder"
+    depends on BT_A2DP_ENABLE
+    default n
+    help
+        A2DP LHDCV2 decoder
+
+config BT_A2DP_LHDCV1_DECODER
+    bool "LHDCV1 decoder"
+    depends on BT_A2DP_ENABLE
+    default n
+    help
+        A2DP LHDCV1 decoder
+
+config BT_A2DP_LHDC_LL_DECODER
+    bool "LHDC_LL decoder"
+    depends on BT_A2DP_ENABLE
+    default n
+    help
+        A2DP LHDC_LL decoder
+		
+config BT_A2DP_MIHC_DECODER
+    bool "MIHC decoder"
+    depends on BT_A2DP_ENABLE
+    default n
+    help
+        A2DP MIHC decoder
+
+config BT_AVRCP_ENABLED
+    bool
+    depends on BT_A2DP_ENABLE
+    default y
+    help
+        Audio/Video Remote Control Profile, AVRCP and A2DP are coupled in Bluedroid,
+        AVRCP still controlled by A2DP option, this is a dummy option currently
+
+menu "AVRCP Features"
+    depends on BT_AVRCP_ENABLED
+
+    config BT_AVRCP_CT_COVER_ART_ENABLED
+        bool "AVRCP CT Cover Art"
+        default y
+        help
+            This enable Cover Art feature for AVRCP CT role, Cover Art requires AVRCP
+            version 1.6 or higher. Therefore, if the Cover Art feature is enabled,
+            AVRCP version will set to 1.6, otherwise, it will remain at 1.5
+
+endmenu
 
 config BT_SPP_ENABLED
     bool "SPP"

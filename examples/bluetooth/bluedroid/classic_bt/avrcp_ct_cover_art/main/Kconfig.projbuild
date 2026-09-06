@@ -1,0 +1,45 @@
+menu "AVRCP Example Configuration"
+    config EXAMPLE_LOCAL_DEVICE_NAME
+        string "Local Device Name"
+        default "ESP_SPEAKER"
+        help
+            Use this option to set local device name.
+
+    config EXAMPLE_A2DP_SINK_STREAM_ENABLE
+        bool "Enable A2DP Sink Stream"
+        default y
+        help
+            This enables the A2DP sink stream. If disable this option,
+            audio data will not be transmitted
+
+    config EXAMPLE_A2DP_SINK_USE_EXTERNAL_CODEC
+        bool "Use External Codec Instead of Internal"
+        depends on EXAMPLE_A2DP_SINK_STREAM_ENABLE
+        default n
+        select BT_A2DP_USE_EXTERNAL_CODEC
+        help
+            If enable, Bluedroid stack will not decode A2DP audio data, user need to decode it in application layer.
+
+    # v5.1.4 适配：I2S 输出引脚（原始 a2dp_sink 例程默认值）
+    config EXAMPLE_I2S_BCK_PIN
+        int "I2S BCK GPIO"
+        default 26
+        depends on EXAMPLE_A2DP_SINK_STREAM_ENABLE
+        help
+            GPIO for I2S bit clock
+
+    config EXAMPLE_I2S_LRCK_PIN
+        int "I2S LRCK (WS) GPIO"
+        default 22
+        depends on EXAMPLE_A2DP_SINK_STREAM_ENABLE
+        help
+            GPIO for I2S word select
+
+    config EXAMPLE_I2S_DATA_PIN
+        int "I2S DATA GPIO"
+        default 25
+        depends on EXAMPLE_A2DP_SINK_STREAM_ENABLE
+        help
+            GPIO for I2S data output
+
+endmenu

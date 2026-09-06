@@ -61,6 +61,7 @@ typedef UINT8 tBTA_AV_STATUS;
 #define BTA_AV_FEAT_ADV_CTRL    0x0200  /* remote control Advanced Control command/response */
 #define BTA_AV_FEAT_DELAY_RPT   0x0400  /* allow delay reporting */
 #define BTA_AV_FEAT_ACP_START   0x0800  /* start stream when 2nd SNK was accepted   */
+#define BTA_AV_FEAT_COVER_ART   0x1000  /* remote control target cover art */
 
 /* Internal features */
 #define BTA_AV_FEAT_NO_SCO_SSPD 0x8000  /* Do not suspend av streaming as to AG events(SCO or Call) */
@@ -225,6 +226,14 @@ typedef UINT8 tBTA_AV_CODE;
 
 typedef UINT8 tBTA_AV_ERR;
 
+/* type codes for BTA_AV_API_CA_GET */
+#define BTA_AV_CA_GET_IMAGE_PROPERTIES      0x01
+#define BTA_AV_CA_GET_IMAGE                 0x02
+#define BTA_AV_CA_GET_LINKED_THUMBNAIL      0x03
+
+typedef UINT8 tBTA_AV_GET_TYPE;
+
+#define BTA_AV_CA_IMG_HDL_LEN   7                       /* Cover Art image handle len, fixed to 7 */
 
 /* AV callback events */
 #define BTA_AV_ENABLE_EVT       0       /* AV enabled */
@@ -254,8 +263,13 @@ typedef UINT8 tBTA_AV_ERR;
 #define BTA_AV_SET_DELAY_VALUE_EVT   22      /* set delay reporting value */
 #define BTA_AV_GET_DELAY_VALUE_EVT   23      /* get delay reporting value */
 #define BTA_AV_SNK_PSC_CFG_EVT  24      /* Protocol service capabilities. */
+
+/* still keep Cover Art event here if Cover Art feature not enabled */
+#define BTA_AV_CA_STATUS_EVT    26  /* Cover Art Client status event */
+#define BTA_AV_CA_DATA_EVT      27  /* Cover Art response body data */
+
 /* Max BTA event */
-#define BTA_AV_MAX_EVT          25
+#define BTA_AV_MAX_EVT          28
 
 
 /* function types for call-out functions */
@@ -478,6 +492,24 @@ typedef struct {
     UINT16          psc_mask;
 } tBTA_AV_SNK_PSC_CFG;
 
+#if BTA_AV_CA_INCLUDED
+
+/* data associated with BTA_AV_CA_STATUS_EVT */
+typedef struct {
+    BOOLEAN         connected;      /* whether Cover Art connection is connected */
+    UINT16          reason;         /* connect failed or disconnect reason */
+} tBTA_AV_CA_STATUS;
+
+/* data associated with BTA_AV_CA_DATA_EVT */
+typedef struct {
+    UINT16          status;         /* OBEX response status */
+    BOOLEAN         final;          /* final data packet */
+    UINT16          data_len;       /* data len */
+    UINT8           *p_data;        /* point to the data in p_hdr */
+    BT_HDR          *p_hdr;         /* after data pass to application, free this packet */
+} tBTA_AV_CA_DATA;
+
+#endif
 
 /* union of data associated with AV callback */
 typedef union {
@@ -503,6 +535,10 @@ typedef union {
     tBTA_AV_RC_FEAT     rc_feat;
     tBTA_AV_DELAY       delay;
     tBTA_AV_SNK_PSC_CFG psc;
+#if BTA_AV_CA_INCLUDED
+    tBTA_AV_CA_STATUS   ca_status;
+    tBTA_AV_CA_DATA     ca_data;
+#endif
 } tBTA_AV;
 
 /* union of data associated with AV Media callback */
@@ -861,6 +897,47 @@ void BTA_AvMetaRsp(UINT8 rc_handle, UINT8 label, tBTA_AV_CODE rsp_code,
 **
 *******************************************************************************/
 void BTA_AvMetaCmd(UINT8 rc_handle, UINT8 label, tBTA_AV_CMD cmd_code, BT_HDR *p_pkt);
+
+#if BTA_AV_CA_INCLUDED
+
+/*******************************************************************************
+**
+** Function         BTA_AvCaOpen
+**
+** Description      Open a Cover Art OBEX connection to peer device. This function
+**                  can only be used if peer device TG support Cover Art feature and
+**                  AV is enabled with feature BTA_AV_FEAT_METADATA.
+**
+** Returns          void
+**
+*******************************************************************************/
+void BTA_AvCaOpen(UINT8 rc_handle, UINT16 pref_packet_len);
+
+/*******************************************************************************
+**
+** Function         BTA_AvCaClose
+**
+** Description      Close a Cover Art OBEX connection.
+**
+** Returns          void
+**
+*******************************************************************************/
+void BTA_AvCaClose(UINT8 rc_handle);
+
+/*******************************************************************************
+**
+** Function         BTA_AvCaGet
+**
+** Description      Start the process to get image properties, get image or get
+**                  linked thumbnail. This function can only be used if Cover Art
+**                  OBEX connection is established.
+**
+** Returns          void
+**
+*******************************************************************************/
+void BTA_AvCaGet(UINT8 rc_handle, tBTA_AV_GET_TYPE type, UINT8 *image_handle, UINT8 *image_descriptor, UINT16 image_descriptor_len);
+
+#endif /* BTA_AV_CA_INCLUDED */
 
 #ifdef __cplusplus
 }

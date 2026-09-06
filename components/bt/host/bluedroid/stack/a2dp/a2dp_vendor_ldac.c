@@ -1,7 +1,13 @@
-/*
+/**
  * SPDX-FileCopyrightText: 2016 The Android Open Source Project
  *
  * SPDX-License-Identifier: Apache-2.0
+ * 
+ * a2dp_vendor_ldac.c
+ * 
+ * a2dp_vendor.c <-> a2dp_vendor_ldac.c <-> a2dp_vendor_ldacbt_decoder.c <- ldacBT.h (OK)
+ * 
+ * a2dp_vendor.c <-> a2dp_vendor_ldac.c <-> a2dp_vendor_ldac_decoder.c <- ldacdec.h (abandoned)
  */
 
 #include <string.h>
@@ -55,8 +61,8 @@ static const tA2DP_DECODER_INTERFACE a2dp_decoder_interface_ldac = {
     NULL,  // decoder_reset,
     a2dp_ldac_decoder_decode_packet_header,
     a2dp_ldac_decoder_decode_packet,
-    NULL,  // decoder_start
-    NULL,  // decoder_suspend
+    a2dp_ldac_decoder_start,  // decoder_start
+    a2dp_ldac_decoder_suspend,  // decoder_suspend
     a2dp_ldac_decoder_configure,
 };
 
@@ -265,16 +271,23 @@ bool A2DP_VendorBuildCodecConfigLdac(UINT8 *p_src_cap, UINT8 *p_result) {
     return false;
   }
 
+  // 优先匹配双方支持的最高采样率（44.1到96kHz都支持；推荐用48kHz，稳定性最好，事实上漫步者他们也是优先考虑48kHz）
+  // 测试发现使用96k时，QQ音乐会导致ldac buffer full的情况，其余播放器未遇到此问题
   if (src_cap.sampleRate & A2DP_LDAC_SAMPLING_FREQ_48000) {
     pref_cap.sampleRate = A2DP_LDAC_SAMPLING_FREQ_48000;
-  } else if (src_cap.sampleRate & A2DP_LDAC_SAMPLING_FREQ_44100) {
+    }else if (src_cap.sampleRate & A2DP_LDAC_SAMPLING_FREQ_44100) {
     pref_cap.sampleRate = A2DP_LDAC_SAMPLING_FREQ_44100;
+  }else if (src_cap.sampleRate & A2DP_LDAC_SAMPLING_FREQ_96000) {
+    pref_cap.sampleRate = A2DP_LDAC_SAMPLING_FREQ_96000;
+  } else if (src_cap.sampleRate & A2DP_LDAC_SAMPLING_FREQ_88200) {
+    pref_cap.sampleRate = A2DP_LDAC_SAMPLING_FREQ_88200;
   } else {
     APPL_TRACE_ERROR("%s: Unsupported sample rate 0x%x", __func__,
                      src_cap.sampleRate);
     return false;
   }
 
+  // 优先匹配Stereo模式
   if (src_cap.channelMode & A2DP_LDAC_CHANNEL_MODE_STEREO) {
     pref_cap.channelMode = A2DP_LDAC_CHANNEL_MODE_STEREO;
   } else if (src_cap.channelMode & A2DP_LDAC_CHANNEL_MODE_DUAL) {

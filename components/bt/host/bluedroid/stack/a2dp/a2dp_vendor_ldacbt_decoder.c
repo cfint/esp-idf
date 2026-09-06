@@ -1,5 +1,12 @@
-/*
+/**
+ * SPDX-FileCopyrightText: 2016 The Android Open Source Project
+ * 
  * SPDX-License-Identifier: Apache-2.0
+ * 
+ * a2dp_vendor_ldacbt_decoder.c
+ * 
+ * 本文件依赖由O2C14开发的外部库libldac-dec中的ldacBT.h
+ * 与a2dp_vendor_ldac_decoder.c相比，本文件性能更好（a2dp_vendor_ldac_decoder.c was abandoned）
  */
 
 #include "common/bt_trace.h"
@@ -7,7 +14,7 @@
 #include "stack/a2dp_vendor_ldac_constants.h"
 #include "stack/a2dp_vendor_ldac_decoder.h"
 
-#include <ldacBT.h>
+#include <ldacBT.h> // O2C14开发的ldac解码器
 
 
 #if (defined(LDAC_DEC_INCLUDED) && LDAC_DEC_INCLUDED == TRUE)
@@ -107,6 +114,14 @@ bool a2dp_ldac_decoder_decode_packet(BT_HDR* p_buf, unsigned char* buf, size_t b
 
     a2dp_ldac_decoder_cb.decode_callback(buf, out_count);
     return true;
+}
+
+void a2dp_ldac_decoder_start() {
+    LOG_INFO("Starting LDAC decoder");
+}
+
+void a2dp_ldac_decoder_suspend() {
+    LOG_INFO("Suspending LDAC decoder");
 }
 
 void a2dp_ldac_decoder_configure(const uint8_t* p_codec_info) {

@@ -4,6 +4,56 @@
 
 ESP-IDF 是乐鑫官方推出的物联网开发框架，支持 Windows、Linux 和 macOS 操作系统。
 
+# 支持的解码器
+
+| Codec | Rates / depth | Notes |
+|-------|---------------|-------|
+| **[LDAC](https://github.com/cfint/libldac-dec/tree/esp32)** | up to 96 kHz / 32-bit | 660 / 909 / 990 kbps |
+| **[LHDC V5](https://github.com/sprlightning/LHDC-V5-Decoder/tree/esp32-d0wd)** | up to 192 kHz / 24-bit | 400–1000 kbps |
+| **[aptX / aptX-HD / aptX-LL](https://github.com/cfint/libfreeaptx-esp/tree/master)** | up to 48 kHz / 24-bit | |
+| **[Opus](https://github.com/xiph/opus/tree/main)** | 48 kHz | |
+| **[LC3plus](https://github.com/cfint/liblc3/tree/esp32)** | up to 96 kHz | |
+| **[AAC](https://github.com/cfint/arduino-fdk-aac/tree/idf_component)** | up to 48 kHz | Helix decoder |
+| **[SBC](components/bt/host/bluedroid/external/sbc)** | 44.1 / 48 kHz | stock baseline |
+
+# 新功能
+
+| Function | Notes |
+|----------|-------|
+| AVRCP Absolute Volume Control | 双向绝对音量控制，移植自 ESP‑IDF V5.1.6 |
+| AVRCP Coverart Display | 接收并显示由手机等A2DP信源设备发送的专辑封面图像，移植自ESP‑IDF V6.1.0与V5.5.2版本 |
+
+> 注意: 此分支需要 PSRAM. 如果你想使用内部的方法, 你可以使用分支 [a2dp-codecs/v6.1.0](https://github.com/sprlightning/esp-idf-bt-multiple-codecs/tree/a2dp-codecs/v6.1.0) .
+
+![](figures/test_lhdcv5_192kHz.jpg)
+
+# 贡献
+
+| User | Contributions |
+|------|---------------|
+| **[cfint](https://github.com/cfint)** | 首次将多个解码器从AOSP移植到ESP‑IDF |
+| **[O2C14](https://github.com/O2C14)** | 独立实现并开源了LDAC解码器的源代码 |
+| **[WillyBilly06](https://github.com/WillyBilly06)** | 独立实现并开源了LHDC V5解码器的源代码 |
+| **[sprlightning](https://github.com/sprlightning)** | 实现了支持分离工作区的LHDC V5解码器，持续维护cfint的ESP‑IDF V5.1.4版本，新增LHDC V5支持，新增AVRCP绝对音量控制功能，新增AVRCP专辑封面显示功能 |
+
+# 如何使用
+
+首先克隆该仓库，然后执行 `git submodule update --init --recursive`。
+
+## 示例 Demo
+
+示例demo是 [MLX_Player_ClassicBT/tree/dev/v5.1.4](https://github.com/sprlightning/MLX_Player_ClassicBT/tree/dev/v5.1.4) , 它证明了 **esp32-d0wd 可以对 LHDC V5 在 192kHz/24bit 进行解码，且 0 卡顿 0 pop** 。更多细节请访问 [disscussion](https://github.com/sprlightning/esp-idf-bt-multiple-codecs/discussions) 。
+
+> 示例 demo 使用 ESP32-CAM 模块 (也叫做 ESP-32S, 芯片是 esp32-d0wd, 4MB Flash, 8MB PSRAM) ，并使用一个 PCM5102A DAC 模块。
+
+![](figures/esp32cam_pcm512a.jpg)
+
+# 如何切换解码器
+
+使用 [Bluetooth Codec Changer](https://play.google.com/store/apps/details?id=com.amrg.bluetooth_codec_converter)。
+
+![](figures/BluetoothCodecChanger.jpg)
+
 # ESP-IDF 版本支持期限
 
 ![支持期限](https://dl.espressif.com/dl/esp-idf/support-periods.svg)

@@ -87,6 +87,9 @@
 #if (UC_BT_A2DP_AAC_DECODER_ENABLED == TRUE)
 #define AAC_DEC_INCLUDED           TRUE
 #endif /* (UC_BT_A2DP_AAC_DECODER_ENABLED == TRUE) */
+#if (UC_BT_A2DP_LHDCV5_DECODER_ENABLED == TRUE)
+#define LHDCV5_DEC_INCLUDED           TRUE
+#endif /* (UC_BT_A2DP_LHDCV5_DECODER_ENABLED == TRUE) */
 #define BTC_AV_SRC_INCLUDED         TRUE
 #define SBC_ENC_INCLUDED            TRUE
 #endif /* UC_BT_A2DP_ENABLED */
@@ -1924,6 +1927,11 @@
 # else
 #  define AVDT_AAC_SEPS	(0)
 # endif /* CONFIG_BT_A2DP_AAC_DECODER */
+# ifdef CONFIG_BT_A2DP_LHDCV5_DECODER
+#  define AVDT_LHDCV5_SEPS	(1)
+# else
+#  define AVDT_LHDCV5_SEPS	(0)
+# endif /* CONFIG_BT_A2DP_LHDCV5_DECODER */
 
 #define AVDT_NUM_SEPS      (3 \
 							+ AVDT_APTX_SEPS \
@@ -1931,6 +1939,7 @@
 							+ AVDT_OPUS_SEPS \
 							+ AVDT_LC3PLUS_SEPS \
 							+ AVDT_AAC_SEPS \
+							+ AVDT_LHDCV5_SEPS \
 							)
 #endif
 
@@ -2244,6 +2253,51 @@
 #else
 #define AVRC_CTLR_INCLUDED          FALSE
 #endif
+#endif
+
+#if (AVRC_INCLUDED == TRUE)
+#if (UC_BT_AVRCP_CT_COVER_ART_ENABLED == TRUE)
+#define BTA_AV_CA_INCLUDED          TRUE
+#define BTC_AV_CA_INCLUDED          TRUE
+#define AVRC_CA_INCLUDED            TRUE
+#endif /* UC_BT_AVRCP_CT_COVER_ART_ENABLED */
+#endif /* AVRC_INCLUDED */
+
+#if UC_BT_GOEPC_ENABLED
+#ifndef RFCOMM_INCLUDED
+#define RFCOMM_INCLUDED             TRUE
+#endif
+#ifndef OBEX_INCLUDED
+#define OBEX_INCLUDED               TRUE
+#endif
+#define GOEPC_INCLUDED              TRUE
+#endif /* UC_BT_GOEPC_ENABLED */
+
+/******************************************************************************
+**
+** GOEP
+**
+******************************************************************************/
+
+/* Maximum GOEP client connection allowed */
+#ifndef GOEPC_MAX_CONNECTION
+#define GOEPC_MAX_CONNECTION              3
+#endif
+
+/******************************************************************************
+**
+** OBEX
+**
+******************************************************************************/
+
+/* Maximum OBEX client connection allowed */
+#ifndef OBEX_MAX_CONNECTION
+#define OBEX_MAX_CONNECTION               3
+#endif
+
+/* Maximum OBEX server registered */
+#ifndef OBEX_MAX_SERVER
+#define OBEX_MAX_SERVER                   2
 #endif
 
 /******************************************************************************

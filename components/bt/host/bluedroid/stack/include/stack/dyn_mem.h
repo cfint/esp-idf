@@ -231,4 +231,12 @@
 #define BTC_DYNAMIC_MEMORY FALSE
 #endif
 
+#ifndef OBEX_DYNAMIC_MEMORY
+#define OBEX_DYNAMIC_MEMORY FALSE
+#endif
+
+#ifndef GOEP_DYNAMIC_MEMORY
+#define GOEP_DYNAMIC_MEMORY FALSE
+#endif
+
 #endif  /* #ifdef DYN_MEM_H */
